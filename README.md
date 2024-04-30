@@ -1,4 +1,5 @@
-# LightBox - CPU Path Tracer
+# LightBox
+LightBox is a CPU Path Tracer. It uses Vulkan and GLFW for window rendering and ImGui for UI rendering.
 
 ## Gallery
 
