@@ -48,6 +48,8 @@
     <ClInclude Include="src\Vertex.h" />
     <ClInclude Include="src\Viewport.h" />
     <ClInclude Include="src\VulkanUtils.h" />
+    <ClInclude Include="src\Triangle.h" />
+    <ClInclude Include="src\Mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AABB.cpp" />
@@ -83,5 +85,7 @@
     <ClCompile Include="src\Vertex.cpp" />
     <ClCompile Include="src\Viewport.cpp" />
     <ClCompile Include="src\VulkanUtils.cpp" />
+    <ClCompile Include="src\Triangle.cpp" />
+    <ClCompile Include="src\Mesh.cpp" />
   </ItemGroup>
 </Project>

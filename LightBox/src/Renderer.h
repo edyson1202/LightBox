@@ -8,13 +8,13 @@
 
 namespace LightBox 
 {
-
+	// CPU Path Tracer
 	class Renderer 
 	{
 	public:
 		struct Settings
 		{
-			uint32_t MaxDepth = 50;
+			uint32_t MaxDepth = 10;
 			bool Accumulate = true;
 		};
 	public:
@@ -63,8 +63,6 @@ namespace LightBox
 		std::vector<uint32_t> m_ImageHorizontalIter;
 		std::vector<uint32_t> m_ImageVerticalIter;
 
-
-		//float* m_HDRData = nullptr;
 		uint8_t* m_HDRData = nullptr;
 		int m_Width;
 		int m_Height;

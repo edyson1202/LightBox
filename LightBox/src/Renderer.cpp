@@ -12,7 +12,6 @@ namespace LightBox
 {
 	inline float LinearToGamma(float linear_component)
 	{
-		//return pow(linear_component, 2.2f);
 		return sqrt(linear_component);
 	}
 	Vector3 pixel_sample_square() {
@@ -27,7 +26,7 @@ namespace LightBox
 	{
 
 		//m_HDRData = stbi_loadf("resources/quarry_cloudy_2k.hdr", &m_Width, &m_Height, &m_Channels, 0);
-		m_HDRData = stbi_load("resources/quarry_cloudy_2k.png", &m_Width, &m_Height, &m_Channels, STBI_rgb_alpha);
+		m_HDRData = stbi_load("resources/hdri_02.png", &m_Width, &m_Height, &m_Channels, STBI_rgb_alpha);
 
 	}
 	void Renderer::OnResize(uint32_t width, uint32_t height)
@@ -57,17 +56,14 @@ namespace LightBox
 	}
 	void Renderer::Render() 
 	{
-		m_PrimaryRays = 0;
-		m_SecondaryRays = 0;
 		Ray ray;
 		ray.m_Origin = m_Camera.GetPosition();
-		float total = (float)(m_FinalImage->GetWidth() * m_FinalImage->GetHeight());
-		float count = 0;
+
 		uint32_t m_ImageWidth = m_FinalImage->GetWidth();
 		if (m_FrameIndex == 1)
 			memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(Vector3));
 
-#define MT 0
+#define MT 1
 #if MT
 		std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
 			[this](uint32_t y)
@@ -94,10 +90,6 @@ namespace LightBox
 				//ray.m_Direction = ray.m_Direction + 0.0008f * pixel_sample_square();
 				Vector3 color = 255.0f * TraceRay(ray, m_Settings.MaxDepth, m_World);
 
-				// Linear to Gamma transform
-				//color.x = LinearToGamma(color.x);
-				//color.y = LinearToGamma(color.y);
-				//color.z= LinearToGamma(color.z);
 
 				m_AccumulationData[y * m_ImageWidth + x] = m_AccumulationData[y * m_ImageWidth + x] + color;
 
@@ -117,11 +109,6 @@ namespace LightBox
 			m_FrameIndex++;
 		else
 			m_FrameIndex = 1;
-
-		//std::cout << "Primary rays per pixel: " << m_PrimaryRays /
-		//	(float)(m_FinalImage->GetWidth() * m_FinalImage->GetHeight()) << "\n";
-		//std::cout << "Secondary rays per pixel: " << m_SecondaryRays /
-		//	(float)(m_FinalImage->GetWidth() * m_FinalImage->GetHeight()) << "\n";
 	}
 	Vector3 Renderer::PerPixel(uint32_t x, uint32_t y)
 	{
@@ -133,11 +120,6 @@ namespace LightBox
 		Vector3 color = 255.0f * TraceRay(ray, m_Settings.MaxDepth, m_World);
 
 		m_AccumulationData[y * m_ImageWidth + x] = m_AccumulationData[y * m_ImageWidth + x] + color;
-
-		// Linear to Gamma transform
-		//color.x = LinearToGamma(color.x);
-		//color.y = LinearToGamma(color.y);
-		//color.z= LinearToGamma(color.z);
 
 		return m_AccumulationData[y * m_ImageWidth + x] /
 			(float)m_FrameIndex;
@@ -154,9 +136,6 @@ namespace LightBox
 			if (useEnvMap) {
 				float u = 0.5f + atan2(ray.GetDirection().z, ray.GetDirection().x) / (2 * (float)pi);
 				float v = 0.5f + asin(-ray.GetDirection().y) / (float)pi;
-
-				if (v == 1)
-					std::cout << "is 1--------------------------------------------------------------\n";
 
 				uint32_t x = u * (m_Width - 1);
 				uint32_t y = v * (m_Height - 1);
@@ -205,22 +184,10 @@ namespace LightBox
 				return attenuation * TraceRay(scattered, depth - 1, world);
 			}
 			return Vector3(0, 0, 0);
-
-
-			// Directional light shading
-			Vector3 light_direction(-1, -1, -1);
-			light_direction = light_direction.Normalize();
-			float t = Vector3::Dot(record.normal, -light_direction);
-
-			Vector3 ambient_light(142, 181, 245);
-			return t > 0 ? t * Vector3(1.0f, 1.0f, 0.f) : Vector3(0, 0, 0);
 		}
 		if (useEnvMap) {
 			float u = 0.5f + atan2(ray.GetDirection().z, ray.GetDirection().x) / (2 * pi);
 			float v = 0.5f + asin(-ray.GetDirection().y) / pi;
-
-			if (v == 1)
-				std::cout << "is 1--------------------------------------------------------------\n";
 
 			uint32_t x = u * (m_Width - 1);
 			uint32_t y = v * (m_Height - 1);
@@ -234,11 +201,14 @@ namespace LightBox
 			return color;
 		}
 		// Sky box shading
-		Vector3 dir = ray.GetDirection();
-		dir = dir.Normalize();
-		float a = 0.5f * (dir.y + 1.0f);
+		if (ray.GetDirection().y < 0)
+			return Vector3(0.23f, 0.2f, 0.2f);
 
-		return (1.0f - a) * Vector3(1.0f, 1.0f, 1.0f) + a * Vector3(127.5f / 255.0f, 178.5f / 255.0f, 1.0f);
+		Vector3 dir = ray.GetDirection();
+		float a = 0.5f * (dir.y + 1.0f);
+		Vector3 sky_color(0.5f, 0.7f, 1.0f);
+
+		return (1.0f - a) * Vector3(1.0f) + a * sky_color;
 	}
 }
 

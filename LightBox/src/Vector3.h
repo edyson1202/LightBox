@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <cmath>
 #include <iostream>
 
@@ -36,6 +38,10 @@ namespace LightBox {
 		static Vector3 Refract(const Vector3& v, const Vector3& n, float etai_over_etat, float cos_theta);
 		static float Dot(const Vector3& u, const Vector3& v) {
 			return u.x * v.x + u.y * v.y + u.z * v.z;
+		}
+		// glm Dot function wrapper to test against own implementation
+		static float Dot2(const Vector3& u, const Vector3& v) {
+			return glm::dot(*((glm::vec3*)&u), *((glm::vec3*)&v));
 		}
 		static Vector3 Cross(const Vector3& u, const Vector3& v) {
 			return Vector3(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x);
