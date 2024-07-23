@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Node.h" />
     <ClInclude Include="src\AABB.h" />
     <ClInclude Include="src\Application.h" />
     <ClInclude Include="src\BVH_Node.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="src\VulkanUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\AABB.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Buffer.cpp" />

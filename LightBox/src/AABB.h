@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include "Ray.h"
 #include "Interval.h"
 

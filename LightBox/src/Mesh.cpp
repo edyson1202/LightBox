@@ -7,6 +7,16 @@ namespace LightBox
 {
 	bool Mesh::Hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
+		if (!m_BVH_Root.Hit(ray, ray_t, rec))
+			return false;
+
+		rec.mat = m_Mat;
+
+		return true;
+
+		if (!m_BVH_Root.m_BoundingBox.Hit(ray, ray_t))
+			return false;
+
 		bool hit_anything = false;
 		float closest_so_far = ray_t.max;
 
@@ -30,7 +40,7 @@ namespace LightBox
 
 		while (std::getline(file, str)) {
 
-			std::cout << str << std::endl;
+			//std::cout << str << std::endl;
 
 			if (str[0] == 'v' && str[1] == ' ') {
 				std::string string_values[3];

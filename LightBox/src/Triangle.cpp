@@ -50,4 +50,9 @@ namespace LightBox
 
 		return true;
 	}
+
+	Vector3 Triangle::GetCenter() const
+	{
+		return (vertices[0] + vertices[1] + vertices[2]) / 3;
+	}
 }

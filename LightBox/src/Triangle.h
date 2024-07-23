@@ -14,16 +14,16 @@ namespace LightBox {
 			vertices[0] = vert0;
 			vertices[1] = vert1;
 			vertices[2] = vert2;
-
-			float min_x = std::min(std::min(vert0.x, vert1.x), std::min(vert1.x, vert2.x));
-			float min_y = std::min(std::min(vert0.y, vert1.y), std::min(vert1.y, vert2.y));
-			float min_z = std::min(std::min(vert0.z, vert1.z), std::min(vert1.z, vert2.z));
-
-			float max_x = std::max(std::max(vert0.x, vert1.x), std::max(vert1.x, vert2.x));
-			float max_y = std::max(std::max(vert0.y, vert1.y), std::max(vert1.y, vert2.y));
-			float max_z = std::max(std::max(vert0.z, vert1.z), std::max(vert1.z, vert2.z));
-
-			m_BoundingBox = AABB(Interval(min_x, max_x), Interval(min_y, max_y), Interval(min_z, max_z));
+			
+			//float min_x = std::min(std::min(vert0.x, vert1.x), std::min(vert1.x, vert2.x));
+			//float min_y = std::min(std::min(vert0.y, vert1.y), std::min(vert1.y, vert2.y));
+			//float min_z = std::min(std::min(vert0.z, vert1.z), std::min(vert1.z, vert2.z));
+			//
+			//float max_x = std::max(std::max(vert0.x, vert1.x), std::max(vert1.x, vert2.x));
+			//float max_y = std::max(std::max(vert0.y, vert1.y), std::max(vert1.y, vert2.y));
+			//float max_z = std::max(std::max(vert0.z, vert1.z), std::max(vert1.z, vert2.z));
+			//
+			//m_BoundingBox = AABB(Interval(min_x, max_x), Interval(min_y, max_y), Interval(min_z, max_z));
 
 			// Calculate triangle's normal
 			Vector3 v0 = vertices[1] - vertices[0];
@@ -36,6 +36,8 @@ namespace LightBox {
 		bool Hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override;
 
 		AABB BoundingBox() const override { return m_BoundingBox; }
+
+		Vector3 GetCenter() const;
 	public:
 		Vector3 vertices[3];
 	private:

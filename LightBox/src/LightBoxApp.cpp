@@ -36,13 +36,15 @@ public:
 		
 		{
 			auto material_ground = new Lambertian(Vector3(0.65f, 0.65f, 0.5f));
+			auto material_ground_01 = new Lambertian(Vector3(0.65f));
 			auto material_center = new Lambertian(Vector3(0.7f, 0.3f, 0.3f));
 			auto material_triangle = new Lambertian(Vector3(0.8f, 0.8f, 0.8f));
 			auto material_left = new Dielectric(1.5f);
-			auto material_right = new Metal(Vector3(0.8f, 0.6f, 0.2f), 0.1f);
-			auto material_dragon = new Metal(Vector3(0.8f, 0.8f, 0.8f), 0.05f);
+			auto material_right = new Metal(Vector3(0.8f, 0.6f, 0.4f), 0.1f);
+			auto material_dragon = new Metal(Vector3(0.8f, 0.8f, 0.8f), 0.4f);
 
-			//m_Scene.Add(std::make_shared<Sphere>(Vector3(1.f, 0.f, -1.f), 0.5f, material_right));
+			//m_Scene.Add(std::make_shared<Sphere>(Vector3(1.5f, 0.f, -1.f), 0.5f, material_right));
+			//m_Scene.Add(std::make_shared<Sphere>(Vector3(-0.078041, 0.502534, -0.867403), 0.01f, material_right));
 			//m_Scene.Add(std::make_shared<Sphere>(Vector3(0, 0.f, -1.3f), 0.5f, material_center));
 			//m_Scene.Add(std::make_shared<Sphere>(Vector3(-1.05f, 0.f, -1.f), 0.5f, material_left));
 			//m_Scene.Add(std::make_shared<Sphere>(Vector3(-1.05f, 0.f, -1.f), -0.4f, material_left));
@@ -51,7 +53,9 @@ public:
 			//m_Scene.Add(std::make_shared<Triangle>(Vector3(0.f, 0.f, -1.f), Vector3(2.f, 0.f, -1.f), Vector3(1.f, 2.f, -2.f), material_triangle));
 
 			auto mesh_data = Mesh::GetMeshDataFromOBJ("C:/Users/Boris/Desktop/low_poly_dragon.obj");
+			auto mesh_data_01 = Mesh::GetMeshDataFromOBJ("C:/Users/Boris/Desktop/statue.obj");
 			m_Scene.Add(std::make_shared<Mesh>(mesh_data, material_dragon));
+			//m_Scene.Add(std::make_shared<Mesh>(mesh_data_01, material_right));
 		} 
 		// Ray tracing in one weekend
 		/*

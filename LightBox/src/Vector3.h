@@ -46,6 +46,15 @@ namespace LightBox {
 		static Vector3 Cross(const Vector3& u, const Vector3& v) {
 			return Vector3(u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x);
 		}
+		static Vector3 Min(const Vector3& u, const Vector3& v) {
+			return Vector3(std::min(u.x, v.x), std::min(u.y, v.y), std::min(u.z, v.z));
+		}
+		static Vector3 Max(const Vector3& u, const Vector3& v) {
+			return Vector3(std::max(u.x, v.x), std::max(u.y, v.y), std::max(u.z, v.z));
+		}
+
+		float  operator [] (unsigned i) const { return ((float*)(&x))[i]; }
+		float& operator [] (unsigned i) { return ((float*)(&x))[i]; }
 		//static Vector3 GetRandomVector3() {
 		//	return Vector3(Random::GetRandomFloat(), Random::GetRandomFloat(), Random::GetRandomFloat());
 		//}
@@ -82,7 +91,7 @@ namespace LightBox {
 		//		return -unit_vector;
 		//}
 		Vector3 operator-() const { return Vector3(-x, -y, -z); }	
-		double operator[](uint32_t i) const { return ((float*)&x)[i]; }
+		//double operator[](uint32_t i) const { return ((float*)&x)[i]; }
 
 		friend std::ostream& operator<<(std::ostream& os, const Vector3& vec);
 	};

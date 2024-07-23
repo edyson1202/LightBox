@@ -50,6 +50,7 @@
     <ClInclude Include="src\VulkanUtils.h" />
     <ClInclude Include="src\Triangle.h" />
     <ClInclude Include="src\Mesh.h" />
+    <ClInclude Include="src\Node.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AABB.cpp" />
@@ -87,5 +88,6 @@
     <ClCompile Include="src\VulkanUtils.cpp" />
     <ClCompile Include="src\Triangle.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\Node.cpp" />
   </ItemGroup>
 </Project>
