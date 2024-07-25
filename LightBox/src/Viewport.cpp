@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-#include "VulkanUtils.h"
+#include "Vulkan/VulkanUtils.h"
 
 namespace LightBox {
 	Viewport::Viewport(Device& device, VkRenderPass& render_pass)

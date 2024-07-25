@@ -13,8 +13,8 @@
 
 #include "Utils.h"
 #include "Vertex.h"
-#include "Image.h"
-#include "VulkanUtils.h"
+#include "Vulkan/Image.h"
+#include "Vulkan/VulkanUtils.h"
 
 static ImGuiIO*					g_ImGuiIO;
 

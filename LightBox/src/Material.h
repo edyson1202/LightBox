@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Ray.h"
-#include "Random.h"
+#include "Math/Random.h"
 
 namespace LightBox
 {

@@ -4,7 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <array>
 
-#include "Vector3.h"
+#include "Math/Vector3.h"
 
 namespace LightBox {
 	struct Vertex

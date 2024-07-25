@@ -6,21 +6,20 @@
 
 #include <memory>
 
-#include "Image.h"
+#include "Vulkan/Image.h"
 #include "EntryPoint.h"
-#include "Random.h"
+#include "Math/Random.h"
 #include "Timer.h"
-#include "Vector3.h"
-#include "Renderer.h"
+#include "Math/Vector3.h"
+#include "CpuPathTracer.h"
 #include "Camera.h"
 #include "Viewport.h"
 #include "Input/Input.h"
 #include "Sphere.h"
-#include "Triangle.h"
 #include "Mesh.h"
 #include "Material.h"
-#include "PathTracer.h"
-#include "Scene.h"
+#include "Vulkan/VulkanRT/GpuPathTracer.h"
+#include "Vulkan/VulkanRT/VulkanRTScene.h"
 #include "BVH_Node.h"
 
 float resolution_scale = 10;
@@ -28,12 +27,18 @@ using namespace LightBox;
 class ExampleLayer : public LightBox::Layer
 {
 public:
-	ExampleLayer(Device& device) 
-		: m_Device(device), m_RayTracer(device, m_Camera, m_Scene), m_Renderer2(device, m_Camera, 
-			m_Viewport), m_Camera(90.f, 0.1f, 100.f), m_Viewport(device, m_Renderer2.GetRenderPass()),
-		m_RTScene(device)//, //m_PathTracer(device, m_RTScene, m_Camera, m_Viewport)
+	ExampleLayer(Device& device)
+		: m_Device(device), m_Camera(90.f, 0.1f, 100.f),
+		m_CpuPathTracer(device, m_Camera, m_Scene),
+		m_GpuRenderer(m_Device, m_Camera, m_Viewport),
+		m_Viewport(device, m_GpuRenderer.GetRenderPass()),
+		m_RTScene(device), m_VulkanScene(m_Device)
 	{
-		
+
+		auto mesh_data_01 = m_CpuScene.LoadDataFromOBJ("C:/Users/Boris/Desktop/statue.obj");
+		m_VulkanScene.LoadSceneFromRAM(m_CpuScene);
+
+		m_GpuRenderer.SetScene(m_VulkanScene);
 		{
 			auto material_ground = new Lambertian(Vector3(0.65f, 0.65f, 0.5f));
 			auto material_ground_01 = new Lambertian(Vector3(0.65f));
@@ -52,10 +57,9 @@ public:
 
 			//m_Scene.Add(std::make_shared<Triangle>(Vector3(0.f, 0.f, -1.f), Vector3(2.f, 0.f, -1.f), Vector3(1.f, 2.f, -2.f), material_triangle));
 
-			auto mesh_data = Mesh::GetMeshDataFromOBJ("C:/Users/Boris/Desktop/low_poly_dragon.obj");
-			auto mesh_data_01 = Mesh::GetMeshDataFromOBJ("C:/Users/Boris/Desktop/statue.obj");
-			m_Scene.Add(std::make_shared<Mesh>(mesh_data, material_dragon));
-			//m_Scene.Add(std::make_shared<Mesh>(mesh_data_01, material_right));
+			//auto mesh_data = Mesh::GetMeshDataFromOBJ("C:/Users/Boris/Desktop/low_poly_dragon.obj");
+			//m_Scene.Add(std::make_shared<Mesh>(mesh_data, material_dragon));
+			m_Scene.Add(std::make_shared<Mesh>(mesh_data_01, material_right));
 		} 
 		// Ray tracing in one weekend
 		/*
@@ -107,24 +111,27 @@ public:
 	}
 	virtual void OnUpdate(float ts) override {
 		if (m_Camera.OnUpdate(ts))
-			m_RayTracer.ResetFrameIndex();
+			m_CpuPathTracer.ResetFrameIndex();
 		if (Input::IsKeyDown(KeyCode::Z))
 			m_IsRayTracing = !m_IsRayTracing;
 	}
 	virtual void OnUIRender(uint32_t current_frame) override {
 		ImGui::Begin("Settings");
 		ImGui::Text("Last render: %.3fms", m_LastRenderTime);
-		ImGui::Text("Sample count: %d", m_RayTracer.GetFrameIndex());
-		ImGui::Checkbox("Render normals", &m_RayTracer.isNormals);
+		ImGui::Text("Sample count: %d", m_CpuPathTracer.GetFrameIndex());
+		ImGui::Checkbox("Render normals", &m_CpuPathTracer.isNormals);
 		ImGui::Checkbox("Real time", &m_RealTime);
-		ImGui::Checkbox("Use environment map", &m_RayTracer.useEnvMap);
+		ImGui::Checkbox("Use environment map", &m_CpuPathTracer.useEnvMap);
 		if (ImGui::Button("Render")) {
 			Render();
 		}
-		if (ImGui::Button("Reset")) {
-			m_RayTracer.ResetFrameIndex();
+		if (ImGui::Button("Save render")) {
+			m_CpuPathTracer.SaveRenderToDisk();
 		}
-		ImGui::Checkbox("Accumulate", &m_RayTracer.GetSettings().Accumulate);
+		if (ImGui::Button("Reset")) {
+			m_CpuPathTracer.ResetFrameIndex();
+		}
+		ImGui::Checkbox("Accumulate", &m_CpuPathTracer.GetSettings().Accumulate);
 		ImGui::End();
 
 		ImGui::Begin("Scene");
@@ -156,7 +163,7 @@ public:
 			(uint32_t)(viewport_size.y / resolution_scale));
 		
 		if (m_IsRayTracing) {
-			auto image = m_RayTracer.GetFinalImage();
+			auto image = m_CpuPathTracer.GetFinalImage();
 			if (image)
 				ImGui::Image(image->GetDescriptorSet(), { (float)image->GetWidth() * resolution_scale, (float)image->GetHeight() * resolution_scale });
 		}
@@ -174,10 +181,10 @@ public:
 	virtual void Render() override{
 		Timer timer;
 
-		m_RayTracer.OnResize((uint32_t)(m_ViewportWidth / resolution_scale),
+		m_CpuPathTracer.OnResize((uint32_t)(m_ViewportWidth / resolution_scale),
 			(uint32_t)(m_ViewportHeight / resolution_scale));
 		//m_PathTracer.OnResize((uint32_t)(m_ViewportWidth), (uint32_t)(m_ViewportHeight));
-		m_RayTracer.Render();
+		m_CpuPathTracer.Render();
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
@@ -186,7 +193,7 @@ public:
 			//m_PathTracer.RecordRenderingCommandBuffer(command_buffer, imageIndex);
 		}
 		else {
-			m_Renderer2.RecordRenderingCommandBuffer(command_buffer, imageIndex);
+			m_GpuRenderer.RecordRenderingCommandBuffer(command_buffer, imageIndex);
 		}
 	}
 
@@ -194,14 +201,16 @@ private:
 	Device& m_Device;
 
 	Camera m_Camera;
-	Renderer m_RayTracer;
-	Renderer2 m_Renderer2;
+	CpuPathTracer m_CpuPathTracer;
+	GpuRenderer m_GpuRenderer;
 	Viewport m_Viewport;
 
 	HittableList m_Scene;
 
-	Scene m_RTScene;
-	//PathTracer m_PathTracer;
+	VulkanRTScene m_RTScene;
+
+	Scene m_CpuScene;
+	VulkanScene m_VulkanScene;	
 
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 

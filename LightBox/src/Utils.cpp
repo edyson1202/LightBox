@@ -1,6 +1,6 @@
 #include "Utils.h"
 #include "Application.h"
-#include "VulkanUtils.h"
+#include "Vulkan/VulkanUtils.h"
 
 namespace LightBox {
 

@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "Vector3.h"
-#include "Mat4.h"
-#include "Vector2.h"
+#include "Math/Vector3.h"
+#include "Math/Mat4.h"
+#include "Math/Vector2.h"
 
 namespace LightBox {
 	class Vector3;

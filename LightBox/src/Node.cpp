@@ -98,6 +98,7 @@ namespace LightBox {
 
 	uint32_t Node::GetLongestEdgeId() const
 	{
+		// TODO can be optimized by subtracting m_Min from m_Max and use the components of the resulting vector
 		uint32_t id = 0;
 		if (std::abs(m_Max.y - m_Min.y) >= std::abs(m_Max.x - m_Min.x))
 			id = 1;

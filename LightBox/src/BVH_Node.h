@@ -2,7 +2,7 @@
 
 #include "Hittable.h"
 #include "HittableList.h"
-#include "Random.h"
+#include "Math/Random.h"
 
 namespace LightBox
 {

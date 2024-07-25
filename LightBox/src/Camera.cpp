@@ -5,7 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Input/Input.h"
-#include "Quat.h"
+#include "Math/Quat.h"
 
 namespace LightBox {
 	Mat4 LookAt(const Vector3& from, const Vector3& to, const Vector3& up) {

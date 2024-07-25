@@ -7,11 +7,11 @@
 #include <functional>
 
 #include "Layer.h"
-#include "Swapchain.h"
-#include "Pipeline.h"
-#include "Buffer.h"
-#include "Renderer2.h"
-#include "Device.h"
+#include "Vulkan/Swapchain.h"
+#include "Vulkan/Pipeline.h"
+#include "Vulkan/Buffer.h"
+#include "Vulkan/GpuRenderer.h"
+#include "Vulkan/Device.h"
 
 const uint32_t WIDTH = 1920;
 const uint32_t HEIGHT = 1080;

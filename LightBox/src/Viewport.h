@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "Device.h"
+#include "Vulkan/Device.h"
 
 namespace LightBox {
 	class Viewport {
