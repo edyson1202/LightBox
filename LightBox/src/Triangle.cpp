@@ -24,9 +24,13 @@ namespace LightBox
 
 		// Edge0
 		Vector3 edge0 = vertices[1] - vertices[0];
+		Vector3 edge2 = vertices[0] - vertices[2];
 		Vector3 c0 = P - vertices[0];
 
-		if (Vector3::Dot(Vector3::Cross(edge0, c0), m_Normal) < 0)
+		float paralelogram_area = Vector3::Cross(edge0, -edge2).GetLength();
+		Vector3 c = Vector3::Cross(edge0, c0);
+		float v = c.GetLength() / paralelogram_area;
+		if (Vector3::Dot(c, m_Normal) < 0)
 			return false;
 
 		// Edge1
@@ -37,16 +41,30 @@ namespace LightBox
 			return false;
 
 		// Edge2
-		Vector3 edge2 = vertices[0] - vertices[2];
+		edge2 = vertices[0] - vertices[2];
 		Vector3 c2 = P - vertices[2];
 
+		c = Vector3::Cross(-edge2, c2);
+		float u = c.GetLength() / paralelogram_area;
 		if (Vector3::Dot(Vector3::Cross(edge2, c2), m_Normal) < 0)
 			return false;
 
 		rec.point = P;
 		rec.t = t;
 		//rec.mat = m_Mat;
-		rec.SetFaceNormal(ray, m_Normal);
+		// SMOOTH SHADING
+		Vector3 N = (1 - u - v) * m_Normals[0] + u * m_Normals[1] + v * m_Normals[2];
+		rec.SetFaceNormal(ray, N);
+		//GetTriangleUv(rec.point, rec.u, rec.v);
+
+		// Set triangle uvs
+		Vector2 ab_uv = uvs[1] - uvs[0];
+		Vector2 ac_uv = uvs[2] - uvs[0];
+
+		Vector2 uv_point = uvs[0] + u * ab_uv + v * ac_uv;
+
+		rec.u = uv_point.x;
+		rec.v = uv_point.y;
 
 		return true;
 	}

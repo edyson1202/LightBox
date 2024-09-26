@@ -31,7 +31,17 @@ namespace LightBox {
 		rec.normal = (rec.point - m_Center) / m_Radius;
 		rec.SetFaceNormal(ray, outward_normal);
 		rec.mat = m_Mat;
+		GetSphereUV(outward_normal, rec.u, rec.v);
 
 		return true;
+	}
+
+	void Sphere::GetSphereUV(const Vector3& p, float& u, float& v)
+	{
+		float theta = std::acos(-p.y);
+		float phi = std::atan2(-p.z, p.x) + pi;
+
+		u = phi / (2 * pi);
+		v = theta / pi;
 	}
 }

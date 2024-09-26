@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "Vertex.h"
+
 
 namespace LightBox
 {
@@ -17,6 +19,8 @@ namespace LightBox
 
 		bool Hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 
+		void GetBVHGeometryData(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int32_t& box_count);
+
 	private:
 		void GrowToInclude(const Triangle& tri);
 
@@ -26,18 +30,15 @@ namespace LightBox
 		Node* m_ChildA = nullptr;
 		Node* m_ChildB = nullptr;
 
-		std::vector<Triangle> m_Tris;
+		std::vector<Triangle>& m_Tris;
 		int32_t m_TriangleIndex;
 		int32_t m_TriangleCount;
 
 		AABB m_BoundingBox;
 
-
 		Vector3 m_Min = Vector3(std::numeric_limits<int32_t>::max() - 1000);
 		Vector3 m_Max = Vector3(std::numeric_limits<int32_t>::min() + 1000);
 	private:
-
-
 	};
 }
 

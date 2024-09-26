@@ -13,6 +13,7 @@ namespace LightBox
 		Vector3 normal;
 		class Material* mat;
 		float t;
+		float u, v;
 		bool front_face;
 
 		void SetFaceNormal(const Ray& ray, Vector3 outward_normal) {
@@ -28,6 +29,8 @@ namespace LightBox
 		virtual bool Hit(const Ray& ray, Interval ray_t, HitRecord& rec) const = 0;
 
 		virtual AABB BoundingBox() const = 0;
+
+	public:
 	};
 }
 

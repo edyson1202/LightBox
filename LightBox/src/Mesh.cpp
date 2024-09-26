@@ -7,6 +7,7 @@ namespace LightBox
 {
 	bool Mesh::Hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
+		//std::cout << "hit\n";
 		if (!m_BVH_Root.Hit(ray, ray_t, rec))
 			return false;
 

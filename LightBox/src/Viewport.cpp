@@ -41,8 +41,11 @@ namespace LightBox {
 			create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			create_info.imageType = VK_IMAGE_TYPE_2D;
 			create_info.format = m_ViewportImageFormat;
+			// ----------------------------------------------------------
 			create_info.extent.width = m_Device.GetSwapchain().GetExtent().width;
 			create_info.extent.height = m_Device.GetSwapchain().GetExtent().height;
+			create_info.extent.width = 1582;
+			create_info.extent.height = 998;
 			create_info.extent.depth = 1;
 			create_info.arrayLayers = 1;
 			create_info.mipLevels = 1;
@@ -104,8 +107,11 @@ namespace LightBox {
 			create_info.renderPass = m_ViewportRenderPass;
 			create_info.attachmentCount = 1;
 			create_info.pAttachments = &m_ViewportImageViews[i];
+			//--------------------------------------------
 			create_info.width = m_Device.GetSwapchain().GetExtent().width;
 			create_info.height = m_Device.GetSwapchain().GetExtent().height;
+			create_info.width = 1582;
+			create_info.height = 998;
 			create_info.layers = 1;
 
 			VkResult res = vkCreateFramebuffer(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_ViewportFramebuffers[i]);

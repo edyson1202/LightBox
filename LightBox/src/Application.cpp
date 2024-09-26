@@ -58,6 +58,7 @@ Application::Application()
 }
 Application::~Application()
 {
+	delete m_Layer;
 	Shutdown();
 	s_appInstance = nullptr;
 }
@@ -257,6 +258,8 @@ void Application::RecordRenderingCommandBuffer(VkCommandBuffer& commandBuffer, u
 	renderPass_info.framebuffer = swapchain.m_SwapchainFramebuffers[imageIndex];
 	renderPass_info.renderArea.offset = { 0, 0 };
 	renderPass_info.renderArea.extent = swapchain.GetExtent();
+	/*renderPass_info.renderArea.extent.width = swapchain.GetExtent().width;
+	renderPass_info.renderArea.extent.height = swapchain.GetExtent().height;*/
 	VkClearValue clearColor{ {{0.2f, 0.2f, 0.2f, 1.f}} };
 	renderPass_info.clearValueCount = 1;
 	renderPass_info.pClearValues = &clearColor;

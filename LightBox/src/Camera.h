@@ -13,37 +13,43 @@ namespace LightBox {
 		Camera(float fov, float near_plane, float far_plane);
 
 		bool OnUpdate(float ts);
-		void OnResize(uint32_t width, uint32_t height);
+		void OnResize(const uint32_t width, const uint32_t height);
+
+		// This is used when deserializing camera data, to ensure the camera is updated
+		void Refresh();
 
 		const Mat4& GetProjection() const { return m_Projection; }
 		const Mat4& GetView() const { return m_View; }
-		float GetFOV() { return m_FOV; }
+		float GetFov() const { return m_Fov; }
 
-		const Vector3& GetPosition() { return m_Position; }
+		const Vector3& GetPosition() const { return m_Position; }
 		const std::vector<Vector3>& GetRayDirections() { return m_RayDirections; }
 
-		void SetFOV(float fov);
+		void SetFov(float fov);
 	private:
 		void RecalculateProjection();
 		void RecalculateView();
 
 		void RecalculateRayDirections();
+	public:
+		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 	private:
 		Vector3 m_Position;
 		Vector3 m_ForwardDirection;
 		float m_Speed = 5.f;
-		float m_FOV;
+		float m_Fov;
 		float m_NearPlane;
 		float m_FarPlane;
 
 		Vector2 m_LastMousePos{ 0.f, 0.f };
-
-		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+		
 		Mat4 m_Projection;
 		Mat4 m_InverseProjection;
 		Mat4 m_CameraToWorld;
 		Mat4 m_View;
 
 		std::vector<Vector3> m_RayDirections;
+
+		friend class SceneSerializer;
 	};
 }

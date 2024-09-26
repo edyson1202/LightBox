@@ -9,7 +9,8 @@ namespace LightBox
 	public:
 		VulkanScene(Device& device);
 
-		void LoadSceneFromRAM(const Scene& scene);
+		void LoadSceneFromRAM(const Scene& scene,
+			std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
 
 	private:

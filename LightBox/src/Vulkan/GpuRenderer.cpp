@@ -19,7 +19,7 @@ namespace LightBox {
 	GpuRenderer::GpuRenderer(Device& device, Camera& camera, Viewport& viewport)
 		: m_Device(device), m_Viewport(viewport), m_Camera(camera)
 	{
-		m_Camera.OnResize(m_Device.GetSwapchain().GetSwapExtent().width, m_Device.GetSwapchain().GetSwapExtent().height);
+		//m_Camera.OnResize(m_Device.GetSwapchain().GetSwapExtent().width, m_Device.GetSwapchain().GetSwapExtent().height);
 
 		std::cout << "width: " << m_Device.GetSwapchain().GetSwapExtent().width << '\n';
 		std::cout << "height: " << m_Device.GetSwapchain().GetSwapExtent().height << '\n';
@@ -60,8 +60,20 @@ namespace LightBox {
 		renderPass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPass_info.renderPass = m_RenderPass;
 		renderPass_info.framebuffer = m_Viewport.GetFramebuffers()[imageIndex];
+		int32_t x_offset = swapchain.GetExtent().width - m_Camera.m_ViewportWidth;
+		int32_t y_offset = swapchain.GetExtent().height - m_Camera.m_ViewportHeight;
+		/*std::cout << "x_offset: " << x_offset << "\n";
+		std::cout << "y_offset: " << y_offset << "\n";
+		std::cout << "swapchain.x: " << swapchain.GetExtent().width << "\n";
+		std::cout << "swapchain.y: " << swapchain.GetExtent().height << "\n";*/
 		renderPass_info.renderArea.offset = { 0, 0 };
-		renderPass_info.renderArea.extent = swapchain.GetExtent();
+		//renderPass_info.renderArea.extent = swapchain.GetExtent();
+		renderPass_info.renderArea.extent.width = m_Camera.m_ViewportWidth;
+		renderPass_info.renderArea.extent.height = m_Camera.m_ViewportHeight;
+		renderPass_info.renderArea.extent.width = 1582;
+		renderPass_info.renderArea.extent.height = 998;
+		/*std::cout << "WIDTH: " << m_Camera.m_ViewportWidth << "\n";
+		std::cout << "HEIGHT: " << m_Camera.m_ViewportHeight << "\n";*/
 		VkClearValue clearColor{ {{0.2f, 0.2f, 0.2f, 1.f}} };
 		renderPass_info.clearValueCount = 1;
 		renderPass_info.pClearValues = &clearColor;
@@ -72,15 +84,19 @@ namespace LightBox {
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(swapchain.GetExtent().width);
-		viewport.height = static_cast<float>(swapchain.GetExtent().height);
+		//viewport.width = static_cast<float>(swapchain.GetExtent().width);
+		//viewport.height = static_cast<float>(swapchain.GetExtent().height);
+		viewport.width = 1582;
+		viewport.height = 998;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
-		scissor.extent = swapchain.GetExtent();
+		//scissor.extent = swapchain.GetExtent();
+		scissor.extent.width = 1582;
+		scissor.extent.height = 998;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 		VkBuffer vertexBuffers[1] = { m_Scene->m_VertexBuffer.GetBuffer() };
@@ -221,14 +237,14 @@ namespace LightBox {
 		memcpy(m_UniformBuffers[currentImage].GetMappedBuffer(), &ubo, sizeof(ubo));
 
 		Mat4 scale = Mat4::GetScaleMatrix(Vector3(1, 1, 1));
-		Mat4 rotation = Mat4::GetYRotationMatrix(time * 90.f);
-		Mat4 translation = Mat4::GetTranslationMatrix(Vector3(0.f, 0.f, -1.f));
+		//Mat4 rotation = Mat4::GetYRotationMatrix(time * 90.f);
+		Mat4 translation = Mat4::GetTranslationMatrix(Vector3(0.f, 0.f, 1.f));
 
 		Mat4 model = Mat4::Multiply(scale, translation);
 		//Mat4 model = Mat4::Multiply(scale, rotation);
 		//model = Mat4::Multiply(model, translation);
 		
-		ubo.model = scale;
+		ubo.model = model;
 		ubo.view = m_Camera.GetView();
 		ubo.proj = m_Camera.GetProjection();
 	}

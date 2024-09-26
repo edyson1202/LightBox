@@ -10,7 +10,18 @@
 
 namespace LightBox
 {
-	void WriteImageToPPMFile(uint32_t image_width, uint32_t image_height, uint32_t* image_data)
+	static Vector3 GetDefaultSkyValue(const Ray& ray)
+	{
+		if (ray.GetDirection().y < 0)
+			return Vector3(0.23f, 0.2f, 0.2f);
+
+		Vector3 dir = ray.GetDirection();
+		float a = 0.5f * (dir.y + 1.0f);
+		Vector3 sky_color(0.5f, 0.7f, 1.0f);
+
+		return (1.0f - a) * Vector3(1.0f) + a * sky_color;
+	}
+	static void WriteImageToPPMFile(const uint32_t image_width, const uint32_t image_height, const uint32_t* image_data)
 	{
 		std::ofstream image_file("image.ppm");
 
@@ -29,32 +40,30 @@ namespace LightBox
 
 		image_file.close();
 	}
-	inline float LinearToGamma(float linear_component)
+	static float LinearToGamma(const float linear_component)
 	{
 		if (linear_component > 0)
 			return sqrt(linear_component);
 
 		return 0;
 	}
-	Vector3 pixel_sample_square() {
-		// Returns a random point in the square surrounding a pixel at the origin.
+	// This is used for anti-aliasing
+	Vector3 pixel_sample_square()
+	{
+		// Returns a random point in a square centered at the pixel's origin.
 		float px = -0.5f + Random::Float();
 		float py = -0.5f + Random::Float();
-		//return Vector3(px * pixel_delta_u) + (py * pixel_delta_v);
+	
 		return Vector3(px, py, 0.f);
 	}
-	CpuPathTracer::CpuPathTracer(Device& device, Camera& camera, HittableList& scene)
-		: m_Device(device), m_Camera(camera), m_World(scene)
+	CpuPathTracer::CpuPathTracer(Device& device, Camera& camera, Scene& new_scene)
+		: m_Device(device), m_Camera(camera), m_Scene(new_scene)
 	{
-
-		//m_HDRData = stbi_loadf("resources/quarry_cloudy_2k.hdr", &m_Width, &m_Height, &m_Channels, 0);
-		m_HDRData = stbi_load("resources/hdri_02.png", &m_Width, &m_Height, &m_Channels, STBI_rgb_alpha);
-
+		
 	}
 	void CpuPathTracer::OnResize(uint32_t width, uint32_t height)
 	{
 		if (m_FinalImage) {
-			// no resize necessary
 			if (m_FinalImage->GetWidth() == width && m_FinalImage->GetHeight() == height)
 				return;
 
@@ -78,14 +87,10 @@ namespace LightBox
 	}
 	void CpuPathTracer::Render() 
 	{
-		Ray ray;
-		ray.m_Origin = m_Camera.GetPosition();
-
-		uint32_t m_ImageWidth = m_FinalImage->GetWidth();
 		if (m_FrameIndex == 1)
 			memset(m_AccumulationData, 0, m_FinalImage->GetWidth() * m_FinalImage->GetHeight() * sizeof(Vector3));
 
-#define MT 1
+#define MT 0
 #if MT
 		std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
 			[this](uint32_t y)
@@ -93,10 +98,15 @@ namespace LightBox
 				std::for_each(std::execution::par, m_ImageHorizontalIter.begin(), m_ImageHorizontalIter.end(),
 				[this, y](uint32_t x)
 					{
-						//RayGen(x, y);
 						uint32_t m_ImageWidth = m_FinalImage->GetWidth();
 						Vector3 accumulated_color = PerPixel(x, y);
-						
+
+						accumulated_color.x = LinearToGamma(accumulated_color.x);
+						accumulated_color.y = LinearToGamma(accumulated_color.y);
+						accumulated_color.z = LinearToGamma(accumulated_color.z);
+
+						accumulated_color = 255.0f * accumulated_color.Clamp(Vector3(0.f), Vector3(1.f));
+
 						m_ImageData[y * m_ImageWidth + x] = 0xff000000;
 						m_ImageData[y * m_ImageWidth + x] |= (uint32_t)accumulated_color.x;
 						m_ImageData[y * m_ImageWidth + x] |= ((uint32_t)accumulated_color.y) << 8;
@@ -105,18 +115,16 @@ namespace LightBox
 			});
 #else
 		for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++) {
-			for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++) {
-				//RayGen(x, y);
+			for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++) 
+			{
+				uint32_t m_ImageWidth = m_FinalImage->GetWidth();
+				Vector3 accumulated_color = PerPixel(x, y);
 
-				ray.m_Direction = m_Camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-				//ray.m_Direction = ray.m_Direction + 0.0008f * pixel_sample_square();
-				Vector3 color = 255.0f * TraceRay(ray, m_Settings.MaxDepth, m_World);
+				accumulated_color.x = LinearToGamma(accumulated_color.x);
+				accumulated_color.y = LinearToGamma(accumulated_color.y);
+				accumulated_color.z = LinearToGamma(accumulated_color.z);
 
-
-				m_AccumulationData[y * m_ImageWidth + x] = m_AccumulationData[y * m_ImageWidth + x] + color;
-
-				Vector3 accumulated_color = m_AccumulationData[y * m_ImageWidth + x] / 
-					(float)m_FrameIndex;
+				accumulated_color = 255.0f * accumulated_color.Clamp(Vector3(0.f), Vector3(1.f));
 
 				m_ImageData[y * m_ImageWidth + x] = 0xff000000;
 				m_ImageData[y * m_ImageWidth + x] |= (uint32_t)accumulated_color.x;
@@ -127,12 +135,7 @@ namespace LightBox
 #endif
 		m_FinalImage->SetData(m_ImageData);
 
-		//WriteImageToPPMFile(m_FinalImage->GetWidth(), m_FinalImage->GetHeight(), m_ImageData);
-
-		if (m_Settings.Accumulate)
-			m_FrameIndex++;
-		else
-			m_FrameIndex = 1;
+		m_Settings.Accumulate ? m_FrameIndex++ : m_FrameIndex = 1;
 	}
 
 	void CpuPathTracer::SaveRenderToDisk() const
@@ -143,21 +146,15 @@ namespace LightBox
 	Vector3 CpuPathTracer::PerPixel(uint32_t x, uint32_t y)
 	{
 		uint32_t m_ImageWidth = m_FinalImage->GetWidth();
-		Ray ray;
-		ray.m_Origin = m_Camera.GetPosition();
-		ray.m_Direction = m_Camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-		//ray.m_Direction = ray.m_Direction + 0.0008f * pixel_sample_square();
-		//Vector3 color = 255.0f * TraceRay(ray, m_Settings.MaxDepth, m_World);
-		Vector3 color = TraceRay(ray, m_Settings.MaxDepth, m_World);
-		color.x = LinearToGamma(color.x);
-		color.y = LinearToGamma(color.y);
-		color.z = LinearToGamma(color.z);
-		color = 255.0f * color;
 
-		m_AccumulationData[y * m_ImageWidth + x] = m_AccumulationData[y * m_ImageWidth + x] + color;
+		Ray ray(m_Camera.GetPosition(),
+			m_Camera.GetRayDirections()[x + y * m_ImageWidth] + 0.0016f * pixel_sample_square());
 
-		return m_AccumulationData[y * m_ImageWidth + x] /
-			(float)m_FrameIndex;
+		Vector3 color = TraceRay(ray, m_Settings.MaxDepth, m_Scene.GetHittableList());
+
+		m_AccumulationData[y * m_ImageWidth + x] += color;
+
+		return m_AccumulationData[y * m_ImageWidth + x] / (float)m_FrameIndex;
 	}
 	Vector3 CpuPathTracer::RayGen(uint32_t x, uint32_t y)
 	{
@@ -166,84 +163,35 @@ namespace LightBox
 		ray.m_Direction = m_Camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
 
 		return Vector3(1.f);
-
-		if (1) {
-			if (useEnvMap) {
-				float u = 0.5f + atan2(ray.GetDirection().z, ray.GetDirection().x) / (2 * (float)pi);
-				float v = 0.5f + asin(-ray.GetDirection().y) / (float)pi;
-
-				uint32_t x = u * (m_Width - 1);
-				uint32_t y = v * (m_Height - 1);
-
-				Vector3 color(0.f);
-				int pixel = (y * m_Width + x) * 4;
-				color.x = m_HDRData[pixel] / 255.f;
-				color.y = m_HDRData[pixel + 1] / 255.f;
-				color.z = m_HDRData[pixel + 2] / 255.f;
-
-				return color;
-			}
-			// Sky box shading
-			Vector3 dir = ray.GetDirection();
-			dir = dir.Normalize();
-			float a = 0.5f * (dir.y + 1.0f);
-
-			return (1.0f - a) * Vector3(1.0f, 1.0f, 1.0f) + a * Vector3(127.5f / 255.0f, 178.5f / 255.0f, 1.0f);
-		}
 	}
+
 	CpuPathTracer::HitPayload CpuPathTracer::Miss(const Ray& ray)
 	{
-		CpuPathTracer::HitPayload payload;
+		HitPayload payload;
 		payload.hit_distance = -1.f;
 
 		return payload;
 	}
+
 	Vector3 CpuPathTracer::TraceRay(const Ray& ray, uint32_t depth, const HittableList& world)
 	{
-		if (depth == m_Settings.MaxDepth)
-			m_PrimaryRays++;
-		else
-			m_SecondaryRays++;
 		HitRecord record;
 		if (depth <= 0)
-			return Vector3(0.0f, 0.0f, 0.0f);
+			return {0.f};
 
-		if (world.Hit(ray, Interval(0.001f, infinity), record)) {
-			// Normals shading
-			if (isNormals)
-				return (record.normal + 1.f) / 2.f;
+		if (!world.Hit(ray, Interval(0.001f, infinity), record))
+			return m_Settings.useEnvMap ? m_Scene.m_EnvMap->GetValueOnSphere(ray.GetDirection()) : GetDefaultSkyValue(ray);
 
-			Ray scattered;
-			Vector3 attenuation;
-			if (record.mat->Scatter(ray, record, attenuation, scattered)) {
-				return attenuation * TraceRay(scattered, depth - 1, world);
-			}
-			return Vector3(0, 0, 0);
-		}
-		if (useEnvMap) {
-			float u = 0.5f + atan2(ray.GetDirection().z, ray.GetDirection().x) / (2 * pi);
-			float v = 0.5f + asin(-ray.GetDirection().y) / pi;
+		Ray scattered;
+		Vector3 attenuation;
+		Vector3 color_from_emission = record.mat->Emitted(record.u, record.v, record.point);
 
-			uint32_t x = u * (m_Width - 1);
-			uint32_t y = v * (m_Height - 1);
+		if (!record.mat->Scatter(ray, record, attenuation, scattered))
+			return color_from_emission;
 
-			Vector3 color(0.f);
-			int pixel = (y * m_Width + x) * 4;
-			color.x = m_HDRData[pixel] / 255.f;
-			color.y = m_HDRData[pixel + 1] / 255.f;
-			color.z = m_HDRData[pixel + 2] / 255.f;
+		Vector3 color_from_scatter = attenuation * TraceRay(scattered, depth - 1, world);
 
-			return color;
-		}
-		// Sky box shading
-		if (ray.GetDirection().y < 0)
-			return Vector3(0.23f, 0.2f, 0.2f);
-
-		Vector3 dir = ray.GetDirection();
-		float a = 0.5f * (dir.y + 1.0f);
-		Vector3 sky_color(0.5f, 0.7f, 1.0f);
-
-		return (1.0f - a) * Vector3(1.0f) + a * sky_color;
+		return color_from_emission + color_from_scatter;
 	}
 }
 

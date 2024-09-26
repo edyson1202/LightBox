@@ -10,7 +10,7 @@ namespace LightBox {
 	class Image
 	{
 	public:
-		Image(Device& device, std::string path);
+		Image(Device& device, std::string& path);
 		Image(Device& device, uint32_t width, uint32_t height, VkFormat format, const void* data = nullptr);
 		~Image();
 

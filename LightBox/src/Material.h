@@ -1,26 +1,52 @@
 #pragma once
 
 #include "Ray.h"
+#include "Texture.h"
 #include "Math/Random.h"
 
 namespace LightBox
 {
-	//struct HitRecord;
 	class Material
 	{
 	public:
-		~Material() = default;
+		virtual ~Material() = default;
 
 		virtual bool Scatter(const Ray& ray, const HitRecord& result, 
 			Vector3& attenuation, Ray& scattered) const = 0;
+
+		virtual Vector3 Emitted(float u, float v, const Vector3& p) const { return Vector3(0.f); }
 	private:
+	};
+
+	class DiffuseLight : public Material
+	{
+	public:
+		DiffuseLight(Texture* tex)
+			: m_Texture(tex) {}
+		DiffuseLight(const Vector3& emit)
+			: m_Texture(new SolidColor(emit)) {}
+
+		Vector3 Emitted(float u, float v, const Vector3& p) const override
+		{
+			return m_Texture->GetValue(u, v, p);
+		}
+
+		bool Scatter(const Ray& ray, const HitRecord& result, Vector3& attenuation, Ray& scattered) const override
+		{
+			return false;
+		}
+
+	private:
+		Texture* m_Texture;
 	};
 
 	class Lambertian : public Material
 	{
 	public:
 		Lambertian(const Vector3 a)
-			: m_Albedo(a) {}
+			: m_AlbedoTex(new SolidColor(a)) {}
+		Lambertian(Texture* texture)
+			: m_AlbedoTex(texture) {}
 
 		bool Scatter(const Ray& ray, const HitRecord& rec,
 			Vector3& attenuation, Ray& scattered) const override
@@ -36,12 +62,14 @@ namespace LightBox
 			//scattered = Ray(rec.point, scatter_direction);
 			scattered.m_Origin = rec.point;
 			scattered.m_Direction = scatter_direction;
-			attenuation = m_Albedo;
+			//attenuation = m_Albedo;
+			attenuation = m_AlbedoTex->GetValue(rec.u, rec.v, rec.point);
 
 			return true;
 		}
 	private:
-		Vector3 m_Albedo;
+		//Vector3 m_Albedo;
+		Texture* m_AlbedoTex;
 	};
 	class Metal : public Material
 	{

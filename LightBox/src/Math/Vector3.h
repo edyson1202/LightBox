@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 
 #include <cmath>
@@ -34,6 +35,12 @@ namespace LightBox {
 			auto s = 1e-8;
 			return (fabs(x) < s) && (fabs(y) < s) && (fabs(z) < z);
 		}
+		Vector3 Clamp(const Vector3& min, const Vector3& max) const
+		{
+			return Vector3(std::clamp(x, min.x, max.x),
+				std::clamp(y, min.y, max.y),
+				std::clamp(z, min.z, max.z));
+		}
 		static Vector3 Reflect(const Vector3& v, const Vector3& normal);
 		static Vector3 Refract(const Vector3& v, const Vector3& n, float etai_over_etat, float cos_theta);
 		static float Dot(const Vector3& u, const Vector3& v) {
@@ -53,45 +60,16 @@ namespace LightBox {
 			return Vector3(std::max(u.x, v.x), std::max(u.y, v.y), std::max(u.z, v.z));
 		}
 
-		float  operator [] (unsigned i) const { return ((float*)(&x))[i]; }
-		float& operator [] (unsigned i) { return ((float*)(&x))[i]; }
-		//static Vector3 GetRandomVector3() {
-		//	return Vector3(Random::GetRandomFloat(), Random::GetRandomFloat(), Random::GetRandomFloat());
-		//}
-		//static Vector3 GetRandomVector3(double min, double max) {
-		//	return Vector3(Random::GetRandomFloat(min, max), Random::GetRandomFloat(min, max), Random::GetRandomFloat(min, max));
-		//}
-		//static Vector3 random(double min, double max) {
-		//	return Vector3(Random::random_double(min, max), Random::random_double(min, max), Random::random_double(min, max));
-		//}
-		//static Vector3 random_in_unit_sphere() {
-		//	while (true) {
-		//		Vector3 p = random(-1, 1);
-		//		if (p.GetLengthSq() < 1)
-		//			return p;
-		//	}
-		//}
-		//static Vector3 Vec3(float min, float max)
-		//{
-		//	return Vector3(Random::Float() * (max - min) + min, Random::Float() * (max - min) + min, Random::Float() * (max - min) + min);
-		//}
-		//static Vector3 GetRandomUnitVector3() {
-		//	// The Cherno
-		//	return Vector3::Vec3(-1.0f, 1.0f);
-		//	// Ray Tracing in One Weekend C++ implementation
-		//	//return GetRandomVector3(-1, 1).Normalize();
-		//	// Ray Tracing in One Weekend C implementation
-		//	return random_in_unit_sphere().Normalize();
-		//}
-		//static Vector3 GetRandomVector3OnHemisphere(const Vector3& normal) {
-		//	Vector3 unit_vector = GetRandomUnitVector3();
-		//	if (Vector3::Dot(normal, unit_vector) > 0.0f)
-		//		return unit_vector;
-		//	else
-		//		return -unit_vector;
-		//}
+		const float& operator [] (unsigned i) const { return (&x)[i]; }
+		float& operator [] (unsigned i) { return (&x)[i]; }
 		Vector3 operator-() const { return Vector3(-x, -y, -z); }	
-		//double operator[](uint32_t i) const { return ((float*)&x)[i]; }
+
+		Vector3& operator+=(const Vector3& other) {
+			this->x += other.x;
+			this->y += other.y;
+			this->z += other.z;
+			return *this; // return the updated object
+		}
 
 		friend std::ostream& operator<<(std::ostream& os, const Vector3& vec);
 	};
@@ -100,9 +78,6 @@ namespace LightBox {
 	}
 	inline Vector3 operator-(const Vector3& u, const Vector3& v) {
 		return Vector3(u.x - v.x, u.y - v.y, u.z - v.z);
-	}
-	inline Vector3* operator+=(Vector3& u, const Vector3& v) {
-		
 	}
 	inline Vector3 operator*(const Vector3& u, const Vector3& v) {
 		return Vector3(u.x * v.x, u.y * v.y, u.z * v.z);

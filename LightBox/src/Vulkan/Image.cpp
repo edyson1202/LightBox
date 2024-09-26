@@ -1,7 +1,6 @@
 #include "Image.h"
 
 #include "backends/imgui_impl_vulkan.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include "Application.h"
@@ -10,7 +9,7 @@
 #include "Buffer.h"
 
 namespace LightBox {
-	Image::Image(Device& device, std::string path)
+	Image::Image(Device& device, std::string& path)
 		: m_Device(device)
 	{
 		std::string file_path = path;

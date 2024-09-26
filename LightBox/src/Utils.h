@@ -8,7 +8,6 @@
 
 #include <vulkan/vulkan.h>
 
-
 namespace LightBox {
 	class Utils
 	{

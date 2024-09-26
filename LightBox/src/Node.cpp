@@ -2,26 +2,36 @@
 
 namespace LightBox {
 	Node::Node(std::vector<Triangle>& tris, int32_t triangle_index, int32_t triangle_count)
-		: m_TriangleIndex(triangle_index),
-		m_TriangleCount(triangle_count)
+		: m_Tris(tris), m_TriangleIndex(triangle_index), m_TriangleCount(triangle_count)
 	{
-		m_Tris = tris;
-
 		for (int32_t i = triangle_index; i < triangle_index + triangle_count; i++)
-		{
 			GrowToInclude(tris[i]);
-		}
 
 		m_BoundingBox = AABB(m_Min, m_Max);
 	}
 
 	void Node::Split(int32_t depth)
 	{
-		if (m_TriangleCount < 100)
+		/*if (depth == 0)
+			return;*/
+		if (m_TriangleCount < 15)
 			return;
 
 		uint32_t longest_edge_id = GetLongestEdgeId();
 		float split_coord = m_Min[longest_edge_id] + (m_Max[longest_edge_id] - m_Min[longest_edge_id]) / 2;
+
+		float object_median = 0;
+		for (int32_t i = m_TriangleIndex; i < m_TriangleIndex + m_TriangleCount; i++) {
+			Vector3* verts = m_Tris[i].vertices;
+			float tri_center = verts[0][longest_edge_id] + verts[1][longest_edge_id]
+				+ verts[2][longest_edge_id];
+			tri_center = tri_center / 3;
+
+			object_median += tri_center;
+		}
+		object_median = object_median / m_TriangleCount;
+		split_coord = object_median;
+
 		int32_t sideA_tri_count = 0;
 
 		for (int32_t i = m_TriangleIndex; i < m_TriangleIndex + m_TriangleCount; i++)
@@ -46,11 +56,17 @@ namespace LightBox {
 		m_ChildA = new Node(m_Tris, m_TriangleIndex, sideA_tri_count);
 		m_ChildB = new Node(m_Tris, m_TriangleIndex + sideA_tri_count, m_TriangleCount - sideA_tri_count);
 
-		std::cout << "Side A index: " << m_TriangleIndex << std::endl;
+		/*std::cout << "Side A index: " << m_TriangleIndex << std::endl;
 		std::cout << "Side B index: " << m_TriangleIndex + sideA_tri_count << std::endl;
 		
 		std::cout << "Side A triangle count: " << sideA_tri_count << std::endl;
-		std::cout << "Side B triangle count: " << m_TriangleCount - sideA_tri_count << std::endl;
+		std::cout << "Side B triangle count: " << m_TriangleCount - sideA_tri_count << std::endl;*/
+
+		if (sideA_tri_count == 0 || m_TriangleCount - sideA_tri_count == 0)
+		{
+			std::cout << "catch!\n";
+			return;
+		}
 
 		m_ChildA->Split(depth - 1);
 		m_ChildB->Split(depth - 1);
@@ -86,24 +102,76 @@ namespace LightBox {
 		return hit_anything;
 	}
 
+	void Node::GetBVHGeometryData(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int32_t& box_count)
+	{
+		// TODO can be optimized (a node always has two children, so it does not make sense to check if both are not null)
+		if (m_ChildA != nullptr && m_ChildB != nullptr)
+		{
+			m_ChildA->GetBVHGeometryData(vertices, indices, box_count);
+			m_ChildB->GetBVHGeometryData(vertices, indices, box_count);
+
+			Vector3 color_01(Random::Float(0, 1.f),
+				Random::Float(0, 1.f),
+				Random::Float(0, 1.f));
+
+			int32_t start_index = vertices.size() - 16;
+			for (int32_t i = start_index; i < vertices.size(); i++)
+				vertices[i].col = {color_01.x, color_01.y, color_01.z};
+		}
+
+		Vector3 color(1.f);
+
+		std::vector<Vertex> local_vertices = { {{m_Min.x, m_Min.y, m_Max.z}, {color.x, color.y, color.z} },
+		{{m_Min.x, m_Max.y, m_Max.z}, {color.x, color.y, color.z} },
+		{{m_Max.x, m_Max.y, m_Max.z}, {color.x, color.y, color.z} },
+		{{m_Max.x, m_Min.y, m_Max.z}, {color.x, color.y, color.z} },
+		{{m_Min.x, m_Min.y, m_Min.z}, {color.x, color.y, color.z} },
+		{{m_Min.x, m_Max.y, m_Min.z}, {color.x, color.y, color.z} },
+		{{m_Max.x, m_Max.y, m_Min.z}, {color.x, color.y, color.z} },
+		{{m_Max.x, m_Min.y, m_Min.z}, {color.x, color.y, color.z} }
+		 };
+		for (int32_t i = 0; i < 8; i++)
+		{
+			vertices.push_back(local_vertices[i]);
+		}
+		std::vector<uint32_t> local_indices = { 0, 2, 1, 0, 3, 2,
+		3, 2, 6, 3, 6, 7,
+		7, 6, 5, 7, 5, 4,
+		4, 5, 1, 4, 1, 0,
+		1, 5, 6, 1, 6, 2,
+		4, 0, 3, 4, 3, 7 };
+		for (int32_t i = 0; i < 36; i++)
+		{
+			indices.push_back(local_indices[i] + box_count * 8);
+		}
+
+		box_count++;
+	}
+
 	void Node::GrowToInclude(const Triangle& tri)
 	{
-		Vector3* verts = (Vector3*)&tri.vertices[0];
+		const Vector3* verts = tri.vertices;
 
 		for (int32_t i = 0; i < 3; i++) {
 			m_Min = Vector3::Min(m_Min, verts[i]);
 			m_Max = Vector3::Max(m_Max, verts[i]);
 		}
+		Vector3 delta = m_Max - m_Min;
+		for (int i = 0; i < 3; i++)
+		{
+			if (delta[i] == 0.f)
+			{
+				m_Min[i] -= 0.001f;
+				m_Max[i] += 0.001f;
+			}
+		}
 	}
 
 	uint32_t Node::GetLongestEdgeId() const
 	{
-		// TODO can be optimized by subtracting m_Min from m_Max and use the components of the resulting vector
-		uint32_t id = 0;
-		if (std::abs(m_Max.y - m_Min.y) >= std::abs(m_Max.x - m_Min.x))
-			id = 1;
-
-		if (std::abs(m_Max.z - m_Min.z) >= std::abs(m_Max[id] - m_Min[id]))
+		Vector3 delta = m_Max - m_Min;
+		uint32_t id = delta.y >= delta.x ? 1 : 0;
+		if (delta.z >= delta[id])
 			id = 2;
 
 		return id;

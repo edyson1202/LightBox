@@ -86,12 +86,16 @@ namespace LightBox {
 		viewport.y = 0.0f;
 		viewport.width = (float)m_Device.GetSwapchain().GetExtent().width;
 		viewport.height = (float)m_Device.GetSwapchain().GetExtent().height;
+		viewport.width = 1582;
+		viewport.height = 998;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
 		scissor.extent = m_Device.GetSwapchain().GetExtent();
+		scissor.extent.width = 1582;
+		scissor.extent.height = 998;
 
 		VkPipelineViewportStateCreateInfo viewport_state_info{};
 		viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

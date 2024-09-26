@@ -27,17 +27,10 @@ namespace LightBox {
 		return mat;
 	}
 	Camera::Camera(float fov, float near_plane, float far_plane)
-		: m_FOV(fov), m_NearPlane(near_plane), m_FarPlane(far_plane)
+		: m_Fov(fov), m_NearPlane(near_plane), m_FarPlane(far_plane)
 	{
 		m_Position = Vector3(0, 0, 0);
-		m_ForwardDirection = Vector3(0, 0, -1);
-
-		//SetFOV(20.f);
-		//m_Position = Vector3(13, 2, 3);
-		////m_ForwardDirection = Vector3(0, 0, 0);
-
-		//m_CameraToWorld = LookAt(Vector3(13, 2, 3), Vector3(0, 0, 0), Vector3(0, 1, 0));
-		//m_View = m_CameraToWorld.GetInverse();
+		m_ForwardDirection = Vector3(0, 0, -1.f);
 	}
 	bool Camera::OnUpdate(float ts)
 	{
@@ -87,11 +80,12 @@ namespace LightBox {
 		if (delta.x != 0.f || delta.y != 0.f) {
 ;			float pitch_delta = delta.y * rotation_speed;
 			float yaw_delta = delta.x * rotation_speed;
-			//Quat q = Quat::HamiltonProduct(Quat::AngleAxis(-pitch_delta, right_direction).Normalize(),
-			//	Quat::AngleAxis(-yaw_delta, Vector3(0, 1, 0)).Normalize());
-			//m_ForwardDirection = Quat::Rotate(q, m_ForwardDirection);
 
-			glm::vec3 right_dir;
+			Quat q = Quat::HamiltonProduct(Quat::AngleAxis(-pitch_delta, right_direction).Normalize(),
+				Quat::AngleAxis(-yaw_delta, Vector3(0, 1, 0)).Normalize());
+			m_ForwardDirection = Quat::Rotate(q, m_ForwardDirection);
+
+			/*glm::vec3 right_dir;
 			right_dir.x = right_direction.x;
 			right_dir.y = right_direction.y;
 			right_dir.z = right_direction.z;
@@ -101,11 +95,11 @@ namespace LightBox {
 			forward_dir.z = m_ForwardDirection.z;
 			glm::quat q_glm = glm::normalize(glm::cross(glm::angleAxis(-pitch_delta, right_dir),
 				glm::angleAxis(-yaw_delta, glm::vec3(0.f, 1.0f, 0.0f))));
-			forward_dir = glm::rotate(q_glm, forward_dir);
+			forward_dir = glm::rotate(q_glm, forward_dir);*/
 
-			m_ForwardDirection.x = forward_dir.x;
+			/*m_ForwardDirection.x = forward_dir.x;
 			m_ForwardDirection.y = forward_dir.y;
-			m_ForwardDirection.z = forward_dir.z;
+			m_ForwardDirection.z = forward_dir.z;*/
 	
 			moved = true;
 		}
@@ -116,7 +110,7 @@ namespace LightBox {
 		}
 		return moved;
 	}
-	void Camera::OnResize(uint32_t width, uint32_t height)
+	void Camera::OnResize(const uint32_t width, const uint32_t height)
 	{
 		if (m_ViewportWidth == width && m_ViewportHeight == height)
 			return;
@@ -124,19 +118,34 @@ namespace LightBox {
 		m_ViewportWidth = width;
 		m_ViewportHeight = height;
 
+		std::cout << "Camera width: " << m_ViewportWidth << '\n';
+		std::cout << "Camera height: " << m_ViewportHeight << '\n';
+
 		RecalculateProjection();
 		RecalculateRayDirections();
 	}
-	void Camera::SetFOV(float fov)
+
+	void Camera::Refresh()
 	{
-		m_FOV = fov;
+		RecalculateView();
 		RecalculateProjection();
 		RecalculateRayDirections();
-		std::cout << "FOV changed\n";
+	}
+
+	void Camera::SetFov(float fov)
+	{
+		if (fov == m_Fov)
+			return;
+
+		m_Fov = fov;
+		RecalculateProjection();
+		RecalculateRayDirections();
 	}
 	void Camera::RecalculateProjection()
 	{
-		m_Projection = Mat4::GetProjectionMatrix(m_FOV, (float)m_ViewportHeight / (float)m_ViewportWidth, 0.1f, 100.f);
+		m_Projection = Mat4::GetProjectionMatrix(m_Fov, (float)m_ViewportHeight / (float)m_ViewportWidth, m_NearPlane, m_FarPlane);
+		//std::cout << "From projection m_ViewportHeight: " << m_ViewportHeight << '\n';
+		//std::cout << "From projection m_ViewportWidth: " << m_ViewportWidth << '\n';
 		m_InverseProjection = m_Projection.GetInverse();
 	}
 	void Camera::RecalculateView()

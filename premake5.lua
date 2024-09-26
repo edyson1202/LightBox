@@ -3,10 +3,12 @@ workspace "LightBox"
 	configurations { "Debug", "Release", "Dist" }
 	startproject "LightBox"
 
+VULKAN_SDK = os.getenv("VULKAN_SDK")
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/imgui"
+	include "vendor/yaml-cpp"
 group ""
 
 project "LightBox"
@@ -17,6 +19,10 @@ project "LightBox"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+	defines
+	{
+		"YAML_CPP_STATIC_DEFINE"
+	}
 	files
 	{
 		-- ** means recursively search the folders downwards
@@ -26,21 +32,23 @@ project "LightBox"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"C:/VulkanSDK/1.3.250.0/Include",
+		"%{VULKAN_SDK}/Include",
 		"vendor/imgui",
+		"vendor/yaml-cpp/include",
 		"vendor/glfw-3.3.8.bin.WIN64/Include",
 		"vendor/glm",
 		"vendor/stb_image"
 	} 
 	libdirs
 	{
-		"C:/VulkanSDK/1.3.250.0/Lib",
+		"%{VULKAN_SDK}/Lib",
 		"vendor/glfw-3.3.8.bin.WIN64/lib-vc2022"
 	}
 	links
 	{
 		-- REMAINDER ImGui is included as a VS Static Lib project
 		"ImGui",
+		"yaml-cpp",
 		"opengl32.lib",
 		"glfw3.lib",
 		"vulkan-1.lib"
