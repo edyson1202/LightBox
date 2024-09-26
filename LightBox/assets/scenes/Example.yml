@@ -1,7 +1,7 @@
 Scene: DefaultScene
 Camera:
   position: [3.02270603, 1.80868542, -3.82963777]
-  forward_direction: [-0.636323094, -0.153267339, 0.756292343]
+  forward_direction: [-0.637814164, -0.164106011, 0.752753913]
   fov: 62
   near_plane: 0.100000001
   far_plane: 100

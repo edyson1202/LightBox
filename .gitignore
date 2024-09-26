@@ -1,5 +1,8 @@
 bin/
 bin-int/
+!vendor/bin/
 .vs/
-*.sln
-vendor/yaml-cpp
+/*.sln
+LightBox/*.vcxproj
+LightBox/*.vcxproj.filters
+LightBox/*.vcxproj.user
