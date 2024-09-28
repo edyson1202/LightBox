@@ -41,10 +41,10 @@ public:
 	{
 		SceneSerializer scene_serializer(m_CpuScene, m_Camera);
 
-		std::cout << (scene_serializer.Deserialize("assets/scenes/Example.yml") 
+		std::cout << (scene_serializer.Deserialize("assets/scenes/Example.yml")
 			? "Serialization successful!\n" : "Serialization failed!\n");
 
-		m_CpuScene.LoadDataFromObj("C:/Users/Boris/Desktop/3d_models/car.obj");
+		m_CpuScene.LoadDataFromObj("resources/car.obj");
 
 		m_CpuScene.LoadEnvMap("resources/hdri_05.hdr");
 

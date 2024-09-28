@@ -3,6 +3,8 @@ LightBox is a CPU Path Tracer. It uses Vulkan and GLFW for window rendering and 
 
 ## How to build
 
+This project is meant to be built for Windows using Visual Studio 2022
+
 - Clone the repository recursively using the `git clone https://github.com/edyson1202/LightBox --recursive` command, to clone the submodules as well
 - Install Visual Studio 2022
 - Install the Vulkan SKD

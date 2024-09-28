@@ -138,11 +138,6 @@ namespace LightBox
 		m_Settings.Accumulate ? m_FrameIndex++ : m_FrameIndex = 1;
 	}
 
-	void CpuPathTracer::SaveRenderToDisk() const
-	{
-		WriteImageToPPMFile(m_FinalImage->GetWidth(), m_FinalImage->GetHeight(), m_ImageData);
-	}
-
 	Vector3 CpuPathTracer::PerPixel(uint32_t x, uint32_t y)
 	{
 		uint32_t m_ImageWidth = m_FinalImage->GetWidth();
@@ -155,22 +150,6 @@ namespace LightBox
 		m_AccumulationData[y * m_ImageWidth + x] += color;
 
 		return m_AccumulationData[y * m_ImageWidth + x] / (float)m_FrameIndex;
-	}
-	Vector3 CpuPathTracer::RayGen(uint32_t x, uint32_t y)
-	{
-		Ray ray;
-		ray.m_Origin = m_Camera.GetPosition();
-		ray.m_Direction = m_Camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-
-		return Vector3(1.f);
-	}
-
-	CpuPathTracer::HitPayload CpuPathTracer::Miss(const Ray& ray)
-	{
-		HitPayload payload;
-		payload.hit_distance = -1.f;
-
-		return payload;
 	}
 
 	Vector3 CpuPathTracer::TraceRay(const Ray& ray, uint32_t depth, const HittableList& world)
@@ -192,6 +171,11 @@ namespace LightBox
 		Vector3 color_from_scatter = attenuation * TraceRay(scattered, depth - 1, world);
 
 		return color_from_emission + color_from_scatter;
+	}
+
+	void CpuPathTracer::SaveRenderToDisk() const
+	{
+		WriteImageToPPMFile(m_FinalImage->GetWidth(), m_FinalImage->GetHeight(), m_ImageData);
 	}
 }
 

@@ -180,7 +180,7 @@ namespace LightBox
 			}
 			else if (mesh_name == "Plane.001")
 			{
-				m_Textures.emplace_back(new ImageTexture("E:/CodingProjects/LightBox/LightBox/resources/wood_floor.png"));
+				m_Textures.emplace_back(new ImageTexture("resources/wood_floor.png"));
 				m_Materials.emplace_back(new Lambertian(m_Textures.back()));
 				//m_Materials.emplace_back(new Lambertian(Vector3(0.8f)));
 				m_Hittables.Add(std::make_shared<Mesh>(triangle_data, m_Materials.back(), mesh_name));
@@ -204,7 +204,7 @@ namespace LightBox
 		m_Materials.emplace_back(new Lambertian(m_Textures.back()));
 		//m_Hittables.Add(std::make_shared<Sphere>(Vector3(0, -100.5f, -1), 100, &m_DefaultMaterial));
 
-		m_Textures.emplace_back(new ImageTexture("E:/CodingProjects/LightBox/LightBox/resources/8k_earth_daymap.jpg"));
+		m_Textures.emplace_back(new ImageTexture("resources/8k_earth_daymap.jpg"));
 		m_Materials.emplace_back(new Lambertian(m_Textures.back()));
 		
 		//m_Hittables.Add(std::make_shared<Sphere>(Vector3(0.6, 0.6, 0), 0.45f, m_DefaultMaterial_04));

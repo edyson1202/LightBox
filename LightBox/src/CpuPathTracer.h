@@ -31,24 +31,11 @@ namespace LightBox
 
 		void SaveRenderToDisk() const;
 	private:
-		// TODO implement functions that correspond to ray-tracing shaders in the Vulkan rt pipeline, get rid of the HitPayload struct
-		struct HitPayload
-		{
-			float hit_distance;
-			Vector3 world_pos;
-			Vector3 world_normal;
-
-			uint32_t object_index;
-		};
-
 		Vector3 PerPixel(uint32_t x, uint32_t y);
-		Vector3 RayGen(uint32_t x, uint32_t y);
-		HitPayload TraceRay(const Ray& ray);
-		HitPayload ClosestHit(const Ray& ray, float hit_distance, uint32_t object_index);
-		HitPayload Miss(const Ray& ray);
 		Vector3 TraceRay(const Ray& ray, uint32_t depth, const HittableList& world);
 
 	private:
+		// TODO maybe make the vulkan device a global variable
 		Device& m_Device;
 		Camera& m_Camera;
 		Scene& m_Scene;
