@@ -18,7 +18,7 @@ namespace LightBox {
 	//	m_Device.CreateBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, mem_properties, m_Buffer, m_Memory);
 	//}
 	Buffer::~Buffer() {
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 		vkDestroyBuffer(device, m_Buffer, allocator);
@@ -45,7 +45,7 @@ namespace LightBox {
 	}
 	void Buffer::Update(void* data, uint32_t size)
 	{
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 		VkBuffer staggingBuffer;
@@ -67,16 +67,16 @@ namespace LightBox {
 	}
 	void* Buffer::Map()
 	{
-		vkMapMemory(m_Device.GetDevice(), m_Memory, 0, m_BufferSize, 0, &m_MappedMemory);
+		vkMapMemory(m_Device.Get(), m_Memory, 0, m_BufferSize, 0, &m_MappedMemory);
 		return m_MappedMemory;
 	}
 	void Buffer::UnMap()
 	{
-		vkUnmapMemory(m_Device.GetDevice(), m_Memory);
+		vkUnmapMemory(m_Device.Get(), m_Memory);
 		free(m_MappedMemory);
 	}
 	void Buffer::CreateVertexBuffer(const std::vector<Vertex>& vertices) {
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 		VkBuffer staggingBuffer;
@@ -100,7 +100,7 @@ namespace LightBox {
 		vkFreeMemory(device, staggingMemory, allocator);
 	}
 	void Buffer::CreateIndexBuffer(const std::vector<uint32_t>& indices) {
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
@@ -129,6 +129,6 @@ namespace LightBox {
 		m_Device.CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Buffer, m_Memory);
 
-		vkMapMemory(m_Device.GetDevice(), m_Memory, 0, bufferSize, 0, &m_MappedMemory);
+		vkMapMemory(m_Device.Get(), m_Memory, 0, bufferSize, 0, &m_MappedMemory);
 	}
 }

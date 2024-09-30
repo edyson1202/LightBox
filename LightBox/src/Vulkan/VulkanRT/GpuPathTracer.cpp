@@ -157,7 +157,7 @@ namespace LightBox
 		create_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
 		create_info.pDependencies = dependencies.data();
 
-		VkResult res = vkCreateRenderPass(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_RenderPass);
+		VkResult res = vkCreateRenderPass(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_RenderPass);
 		check_vk_result(res);
 	}
 	void GpuPathTracer::CreateDescriptorPool()
@@ -178,7 +178,7 @@ namespace LightBox
 		pool_info.poolSizeCount = 1;
 		pool_info.pPoolSizes = pool_sizes.data();
 
-		VkResult res = vkCreateDescriptorPool(m_Device.GetDevice(), &pool_info,
+		VkResult res = vkCreateDescriptorPool(m_Device.Get(), &pool_info,
 			m_Device.GetAllocator(), &m_DescriptorPool);
 		check_vk_result(res);
 	}
@@ -209,7 +209,7 @@ namespace LightBox
 		layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
 		layout_info.pBindings = bindings.data();
 
-		VkResult res = vkCreateDescriptorSetLayout(m_Device.GetDevice(), &layout_info,
+		VkResult res = vkCreateDescriptorSetLayout(m_Device.Get(), &layout_info,
 			m_Device.GetAllocator(), &m_DescriptorSetLayout);
 		check_vk_result(res);
 	}
@@ -223,7 +223,7 @@ namespace LightBox
 		allocInfo.descriptorSetCount = 1;
 		allocInfo.pSetLayouts = layouts.data();
 
-		VkResult res = vkAllocateDescriptorSets(m_Device.GetDevice(), &allocInfo, &m_DescriptorSets[0]);
+		VkResult res = vkAllocateDescriptorSets(m_Device.Get(), &allocInfo, &m_DescriptorSets[0]);
 		check_vk_result(res);
 
 		// Setup the descriptor for binding our top level acceleration structure to the ray tracing shaders
@@ -268,7 +268,7 @@ namespace LightBox
 			acceleration_structure_write,
 			result_image_write,
 			uniform_buffer_write };
-		vkUpdateDescriptorSets(m_Device.GetDevice(), static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, VK_NULL_HANDLE);
+		vkUpdateDescriptorSets(m_Device.Get(), static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, VK_NULL_HANDLE);
 	}
 	void GpuPathTracer::UpdateUniformBuffer(uint32_t currentImage)
 	{

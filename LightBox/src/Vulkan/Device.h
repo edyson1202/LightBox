@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "vulkan/vulkan.h"
 
 #include "Vulkan/Swapchain.h"
@@ -12,64 +14,33 @@ namespace LightBox {
 		Device(GLFWwindow* window);
 		~Device();
 
-		VkInstance GetInstance() { return m_Instance; }
-		VkDevice& GetDevice() { return m_Device; }
+		VkInstance GetInstance() const { return m_Instance; }
+		VkDevice& Get() { return m_Device; }
 		VkPhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
-		VkAllocationCallbacks* GetAllocator() { return m_Allocator; }
-		uint32_t GetGraphicsQueueFamilyIndex() { return m_GraphicsQueueFamilyIndex; }
+		VkAllocationCallbacks* GetAllocator() const { return m_Allocator; }
+		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
 		VkQueue& GetGraphicsQueue() { return m_Queue; }
-		VkCommandPool GetCommandPool() { return m_CommandPool; }
-		GLFWwindow* GetWindow() { return m_Window; }
-		Swapchain& GetSwapchain() { return *m_Swapchain; }
-		VkSurfaceKHR GetSurface() { return m_Surface; }
+		VkCommandPool GetCommandPool() const { return m_CommandPool; }
+		GLFWwindow* GetWindow() const { return m_Window; }
+		Swapchain& GetSwapchain() const { return *m_Swapchain; }
+		VkSurfaceKHR GetSurface() const { return m_Surface; }
 
+		static bool IsPhysicalDeviceSupportsExtensions(const VkPhysicalDevice device, const std::vector<const char*>& exts);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties,
 			VkBuffer& buffer, VkDeviceMemory& buffer_memory);
 		VkCommandBuffer BeginSingleTimeCommands();
 		void EndSingleTimeCommands(VkCommandBuffer command_buffer);
 		uint64_t Device::get_buffer_device_address(VkBuffer buffer);
-
-		// Vulkan Ray Tracing extension functions
-		PFN_vkCmdTraceRaysKHR pfn_vkCmdTraceRaysKHR = VK_NULL_HANDLE;
-		VKAPI_ATTR void VKAPI_CALL vkCmdTraceRaysKHR(
-			VkCommandBuffer commandBuffer,
-			const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
-			const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
-			const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
-			const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable,
-			uint32_t width,
-			uint32_t height,
-			uint32_t depth);
-		PFN_vkGetAccelerationStructureBuildSizesKHR pfn_vkGetAccelerationStructureBuildSizesKHR;
-		VKAPI_ATTR void VKAPI_CALL vkGetAccelerationStructureBuildSizesKHR(
-			VkDevice                                    device,
-			VkAccelerationStructureBuildTypeKHR         buildType,
-			const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
-			const uint32_t* pMaxPrimitiveCounts,
-			VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
-		PFN_vkCreateAccelerationStructureKHR pfn_vkCreateAccelerationStructureKHR;
-		VKAPI_ATTR VkResult VKAPI_CALL vkCreateAccelerationStructureKHR(
-			VkDevice                                    device,
-			const VkAccelerationStructureCreateInfoKHR* pCreateInfo,
-			const VkAllocationCallbacks* pAllocator,
-			VkAccelerationStructureKHR* pAccelerationStructure);
-		VKAPI_ATTR void VKAPI_CALL vkCmdBuildAccelerationStructuresKHR(
-			VkCommandBuffer                             commandBuffer,
-			uint32_t                                    infoCount,
-			const VkAccelerationStructureBuildGeometryInfoKHR* pInfos,
-			const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos);
 	private:
 		void CreateInstance();
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();
 		void CreateSurface();
 		void CreateCommandPool();
+		void LoadExternalFunctionPointers();
 
 		void PrintVulkanInstanceSupportedExtensions();
-
-
-
 	private:
 		VkInstance m_Instance = VK_NULL_HANDLE;
 		VkDevice m_Device = VK_NULL_HANDLE;
@@ -86,3 +57,18 @@ namespace LightBox {
 		VkDebugReportCallbackEXT m_DebugReport = VK_NULL_HANDLE;
 	};
 }
+
+inline PFN_vkGetAccelerationStructureBuildSizesKHR pfn_vkGetAccelerationStructureBuildSizesKHR = VK_NULL_HANDLE;
+inline PFN_vkCreateAccelerationStructureKHR pfn_vkCreateAccelerationStructureKHR = VK_NULL_HANDLE;
+inline PFN_vkCmdBuildAccelerationStructuresKHR pfn_vkCmdBuildAccelerationStructuresKHR = VK_NULL_HANDLE;
+
+inline PFN_vkGetAccelerationStructureDeviceAddressKHR pfn_vkGetAccelerationStructureDeviceAddressKHR = VK_NULL_HANDLE;
+inline PFN_vkGetBufferDeviceAddressKHR pfn_vkGetBufferDeviceAddressKHR = VK_NULL_HANDLE;
+
+inline PFN_vkGetRayTracingShaderGroupHandlesKHR pfn_vkGetRayTracingShaderGroupHandlesKHR = VK_NULL_HANDLE;
+inline PFN_vkCreateRayTracingPipelinesKHR pfn_vkCreateRayTracingPipelinesKHR = VK_NULL_HANDLE;
+inline PFN_vkCmdTraceRaysKHR pfn_vkCmdTraceRaysKHR = VK_NULL_HANDLE;
+
+
+
+

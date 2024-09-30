@@ -23,13 +23,13 @@ namespace LightBox {
 	Viewport::~Viewport()
 	{
 		for (uint32_t i = 0; i < m_ViewportImages.size(); i++) {
-			vkDestroyImage(m_Device.GetDevice(), m_ViewportImages[i], m_Device.GetAllocator());
-			vkFreeMemory(m_Device.GetDevice(), m_ViewportImagesMemory[i], m_Device.GetAllocator());
+			vkDestroyImage(m_Device.Get(), m_ViewportImages[i], m_Device.GetAllocator());
+			vkFreeMemory(m_Device.Get(), m_ViewportImagesMemory[i], m_Device.GetAllocator());
 
-			vkDestroyImageView(m_Device.GetDevice(), m_ViewportImageViews[i], m_Device.GetAllocator());
-			vkDestroyFramebuffer(m_Device.GetDevice(), m_ViewportFramebuffers[i], m_Device.GetAllocator());
+			vkDestroyImageView(m_Device.Get(), m_ViewportImageViews[i], m_Device.GetAllocator());
+			vkDestroyFramebuffer(m_Device.Get(), m_ViewportFramebuffers[i], m_Device.GetAllocator());
 		}
-		vkDestroySampler(m_Device.GetDevice(), m_Sampler, m_Device.GetAllocator());
+		vkDestroySampler(m_Device.Get(), m_Sampler, m_Device.GetAllocator());
 	}
 	void Viewport::CreateViewportImages()
 	{
@@ -55,17 +55,17 @@ namespace LightBox {
 			create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-			VkResult res = vkCreateImage(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_ViewportImages[i]);
+			VkResult res = vkCreateImage(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_ViewportImages[i]);
 			check_vk_result(res);
 
 			VkMemoryRequirements mem_req;
-			vkGetImageMemoryRequirements(m_Device.GetDevice(), m_ViewportImages[i], &mem_req);
+			vkGetImageMemoryRequirements(m_Device.Get(), m_ViewportImages[i], &mem_req);
 			VkMemoryAllocateInfo alloc_info{};
 			alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 			alloc_info.allocationSize = mem_req.size;
 			alloc_info.memoryTypeIndex = m_Device.FindMemoryType(mem_req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-			vkAllocateMemory(m_Device.GetDevice(), &alloc_info, m_Device.GetAllocator(), &m_ViewportImagesMemory[i]);
-			vkBindImageMemory(m_Device.GetDevice(), m_ViewportImages[i], m_ViewportImagesMemory[i], 0);
+			vkAllocateMemory(m_Device.Get(), &alloc_info, m_Device.GetAllocator(), &m_ViewportImagesMemory[i]);
+			vkBindImageMemory(m_Device.Get(), m_ViewportImages[i], m_ViewportImagesMemory[i], 0);
 
 			VkCommandBuffer cmd_buffer = m_Device.BeginSingleTimeCommands();
 			InsertImageMemoryBarrier(cmd_buffer, m_ViewportImages[i],
@@ -94,7 +94,7 @@ namespace LightBox {
 			create_info.subresourceRange.baseArrayLayer = 0;
 			create_info.subresourceRange.layerCount = 1;
 
-			VkResult res = vkCreateImageView(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_ViewportImageViews[i]);
+			VkResult res = vkCreateImageView(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_ViewportImageViews[i]);
 			check_vk_result(res);
 		}
 	}
@@ -114,7 +114,7 @@ namespace LightBox {
 			create_info.height = 998;
 			create_info.layers = 1;
 
-			VkResult res = vkCreateFramebuffer(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_ViewportFramebuffers[i]);
+			VkResult res = vkCreateFramebuffer(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_ViewportFramebuffers[i]);
 			check_vk_result(res);
 		}
 	}
@@ -138,7 +138,7 @@ namespace LightBox {
 		create_info.minLod = -1000.0f;
 		create_info.maxLod = 1000.0f;
 
-		VkResult res = vkCreateSampler(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_Sampler);
+		VkResult res = vkCreateSampler(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_Sampler);
 		check_vk_result(res);
 	}
 	void Viewport::CreateImageDescriptorSets()

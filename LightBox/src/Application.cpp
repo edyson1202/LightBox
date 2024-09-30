@@ -93,7 +93,7 @@ void Application::Shutdown()
 
 	ShutdownImGui();
 
-	vkDestroyDescriptorPool(m_Device->GetDevice(), m_ImGuiDescriptorPool, m_Device->GetAllocator());
+	vkDestroyDescriptorPool(m_Device->Get(), m_ImGuiDescriptorPool, m_Device->GetAllocator());
 
 	ShutdownVulkan();
 	glfwDestroyWindow(m_WindowHandle);
@@ -176,10 +176,10 @@ void Application::Run()
 		m_TimeStep = std::min(m_FrameTime, 0.0333f);
 		m_LastFrameTime = time;
 	}
-	vkDeviceWaitIdle(m_Device->GetDevice());
+	vkDeviceWaitIdle(m_Device->Get());
 }
 void Application::FrameRender() {
-	VkDevice device = m_Device->GetDevice();
+	VkDevice device = m_Device->Get();
 	VkQueue& graphics_queue = m_Device->GetGraphicsQueue();
 	Swapchain& swapchain = m_Device->GetSwapchain();
 
@@ -321,7 +321,7 @@ void Application::InitImGui(GLFWwindow* window)
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = m_Device->GetInstance();
 	init_info.PhysicalDevice = m_Device->GetPhysicalDevice();
-	init_info.Device = m_Device->GetDevice();
+	init_info.Device = m_Device->Get();
 	init_info.QueueFamily = m_Device->GetGraphicsQueueFamilyIndex();
 	init_info.Queue = m_Device->GetGraphicsQueue();
 	init_info.PipelineCache = VK_NULL_HANDLE;
@@ -366,7 +366,7 @@ void Application::CreateImGuiDescriptorPool() {
 	pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
 	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
-	VkResult err = vkCreateDescriptorPool(m_Device->GetDevice(), &pool_info, m_Device->GetAllocator(), &m_ImGuiDescriptorPool);
+	VkResult err = vkCreateDescriptorPool(m_Device->Get(), &pool_info, m_Device->GetAllocator(), &m_ImGuiDescriptorPool);
 	check_vk_result(err);
 }
 void Application::CreateCommandBuffers()
@@ -381,7 +381,7 @@ void Application::CreateCommandBuffers()
 	//alloc_info.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 	alloc_info.commandBufferCount = m_Device->GetSwapchain().GetImageCount();
 
-	VkResult err = vkAllocateCommandBuffers(m_Device->GetDevice(), &alloc_info, m_CommandBuffers.data());
+	VkResult err = vkAllocateCommandBuffers(m_Device->Get(), &alloc_info, m_CommandBuffers.data());
 	check_vk_result(err);
 }
 //void Application::SubmitResourceFree(std::function<void()>&& func) {

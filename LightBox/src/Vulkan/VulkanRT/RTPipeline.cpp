@@ -30,7 +30,7 @@ namespace LightBox
 		pipeline_layout_create_info.setLayoutCount = 1;
 		pipeline_layout_create_info.pSetLayouts = &m_PathTracer.GetScene().GetDescriptorSetLayout();
 
-		VkResult res = (vkCreatePipelineLayout(m_Device.GetDevice(), &pipeline_layout_create_info,
+		VkResult res = (vkCreatePipelineLayout(m_Device.Get(), &pipeline_layout_create_info,
 			nullptr, &m_RTPipelineLayout));
 		check_vk_result(res);
 
@@ -111,7 +111,7 @@ namespace LightBox
 		rtpipeline_info.pGroups = m_ShaderGroups.data();
 		rtpipeline_info.maxPipelineRayRecursionDepth = 1;
 		rtpipeline_info.layout = m_RTPipelineLayout;
-		res = vkCreateRayTracingPipelinesKHR(m_Device.GetDevice(), VK_NULL_HANDLE, VK_NULL_HANDLE,
+		res = pfn_vkCreateRayTracingPipelinesKHR(m_Device.Get(), VK_NULL_HANDLE, VK_NULL_HANDLE,
 			1, &rtpipeline_info, m_Device.GetAllocator(), &m_RTPipeline);
 		check_vk_result(res);
 	}
@@ -127,7 +127,7 @@ namespace LightBox
 
 		// Copy the pipeline's shader handles into a host buffer
 		std::vector<uint8_t> shader_handle_storage(sbt_size);
-		VkResult res = vkGetRayTracingShaderGroupHandlesKHR(m_Device.GetDevice(), m_RTPipeline, 0, 
+		VkResult res = pfn_vkGetRayTracingShaderGroupHandlesKHR(m_Device.Get(), m_RTPipeline, 0, 
 			group_count, sbt_size, shader_handle_storage.data());
 		check_vk_result(res);
 

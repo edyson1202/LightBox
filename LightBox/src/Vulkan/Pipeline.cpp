@@ -22,12 +22,12 @@ namespace LightBox {
 	}
 	;
 	Pipeline::~Pipeline() {
-		vkDestroyPipelineLayout(m_Device.GetDevice(), m_PipelineLayout, m_Allocator);
-		vkDestroyPipeline(m_Device.GetDevice(), m_GraphicsPipeline, m_Allocator);
+		vkDestroyPipelineLayout(m_Device.Get(), m_PipelineLayout, m_Allocator);
+		vkDestroyPipeline(m_Device.Get(), m_GraphicsPipeline, m_Allocator);
 	}
 	void Pipeline::CreateGraphicsPipeline()
 	{
-		VkDevice& device = m_Device.GetDevice();
+		VkDevice& device = m_Device.Get();
 
 		static const char* vert_shader_path = "src/shaders/raster.vert.spv";
 		static const char* frag_shader_path = "src/shaders/raster.frag.spv";
@@ -224,7 +224,7 @@ namespace LightBox {
 		create_info.codeSize = codeSize;
 		create_info.pCode = code;
 		VkShaderModule shaderModule;
-		VkResult err = vkCreateShaderModule(device.GetDevice(), &create_info, device.GetAllocator(),
+		VkResult err = vkCreateShaderModule(device.Get(), &create_info, device.GetAllocator(),
 			&shaderModule);
 		check_vk_result(err);
 

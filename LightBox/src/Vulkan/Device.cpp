@@ -6,9 +6,11 @@
 
 #include <iostream>
 #include <assert.h>
+#include <unordered_set>
 #include <vector>
 
 #include "VulkanUtils.h"
+#include "Utils.h"
 
 //#define IMGUI_UNLIMITED_FRAME_RATE
 //#define _DEBUG
@@ -25,28 +27,12 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, 
 VkDevice g_Device = VK_NULL_HANDLE;
 
 namespace LightBox {
-	std::vector<const char*> device_extensions = {
+	std::vector<const char*> req_physical_device_exts = {
 	VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
 	VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 	VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
 	VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-	// HELPER FUNCTIONS
-	bool AreExtensionsIncluded(std::vector<const char*>& a, std::vector<VkExtensionProperties>& b)
-	{
-		for (uint32_t i = 0; i < a.size(); i++) {
-			bool flag = false;
-			for (uint32_t j = 0; j < b.size(); j++) {
-				if (strcmp(a[i], b[j].extensionName)) {
-					flag = true;
-					break;
-				}
-			}
-			if (!flag)
-				return false;
-		}
-		return true;
-	}
 
 	Device::Device(GLFWwindow* window) 
 		: m_Window(window) 
@@ -56,10 +42,13 @@ namespace LightBox {
 		CreateLogicalDevice();
 		CreateSurface();
 		CreateCommandPool();
-		m_Swapchain = new Swapchain(*this);
 
 		g_Device = m_Device;
+		LoadExternalFunctionPointers();
+
+		m_Swapchain = new Swapchain(*this);
 	}
+
 	Device::~Device() {
 
 		vkDestroySurfaceKHR(m_Instance, m_Surface, m_Allocator);
@@ -73,8 +62,8 @@ namespace LightBox {
 
 		vkDestroyDevice(m_Device, m_Allocator);
 		vkDestroyInstance(m_Instance, m_Allocator);
-
 	}
+
 	void Device::CreateInstance()
 	{
 		// VULKAN INSTANCE
@@ -92,7 +81,6 @@ namespace LightBox {
 			instance_info.pApplicationInfo = &app_info;
 			instance_info.enabledExtensionCount = extension_count;
 			instance_info.ppEnabledExtensionNames = extensions;
-
 
 #ifdef IMGUI_VULKAN_DEBUG_REPORT
 			// Enabling validation layers
@@ -133,32 +121,40 @@ namespace LightBox {
 			PrintVulkanInstanceSupportedExtensions();
 		}
 	}
+
 	void Device::SelectPhysicalDevice()
 	{
 		// Query physical devices
 		uint32_t gpu_count;
 		vkEnumeratePhysicalDevices(m_Instance, &gpu_count, nullptr);
-		std::cout << "[vulkan] Physical devices count: " << gpu_count << '\n';
 		std::vector<VkPhysicalDevice> devices(gpu_count);
 		VkResult res = vkEnumeratePhysicalDevices(m_Instance, &gpu_count, devices.data());
 		check_vk_result(res);
-		std::cout << gpu_count << "\n";
 
-		// Select a discrete GPU
-		for (uint32_t i = 0; i < gpu_count; i++)
+		std::cout << "[VULKAN] Physical devices count: " << gpu_count << '\n';
+
+		// Select a physical device
+		for (const VkPhysicalDevice& device : devices)
 		{
-			uint32_t extension_count;
-			res = vkEnumerateDeviceExtensionProperties(devices[i], nullptr, &extension_count, nullptr);
-			check_vk_result(res);
-			std::vector<VkExtensionProperties> extension_properties(extension_count);
-			res = vkEnumerateDeviceExtensionProperties(devices[i], nullptr, &extension_count, extension_properties.data());
-			check_vk_result(res);
-			if (AreExtensionsIncluded(device_extensions, extension_properties)) {
-				m_PhysicalDevice = devices[i];
+			VkPhysicalDeviceProperties device_properties;
+			vkGetPhysicalDeviceProperties(device, &device_properties);
+
+			if (IsPhysicalDeviceSupportsExtensions(device, req_physical_device_exts)
+				&& device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+				m_PhysicalDevice = device;
+				VkPhysicalDeviceProperties device_properties;
+				vkGetPhysicalDeviceProperties(m_PhysicalDevice, &device_properties);
+
+				std::cout << "[VULKAN] '" << device_properties.deviceName << "' selected as a physical device\n";
+
 				break;
 			}
 		}
+
+		TerminateIf(m_PhysicalDevice == VK_NULL_HANDLE, "No GPU found to support the required device extensions");
 	}
+
 	void Device::CreateLogicalDevice()
 	{
 		// SELECT GRAPHICS QUEUE FAMILY INDEX
@@ -206,8 +202,8 @@ namespace LightBox {
 		// LOGICAL DEVICE
 		VkDeviceCreateInfo device_info = {};
 		device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		device_info.enabledExtensionCount = (uint32_t)device_extensions.size();
-		device_info.ppEnabledExtensionNames = device_extensions.data();
+		device_info.enabledExtensionCount = (uint32_t)req_physical_device_exts.size();
+		device_info.ppEnabledExtensionNames = req_physical_device_exts.data();
 		device_info.pEnabledFeatures = nullptr;
 		device_info.pNext = &features2;
 		device_info.queueCreateInfoCount = 1;
@@ -222,6 +218,7 @@ namespace LightBox {
 		pfn_vkGetAccelerationStructureBuildSizesKHR = reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(vkGetDeviceProcAddr(m_Device, "vkGetAccelerationStructureBuildSizesKHR"));
 		pfn_vkCreateAccelerationStructureKHR = reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(vkGetDeviceProcAddr(m_Device, "vkCreateAccelerationStructureKHR"));
 	}
+
 	void Device::CreateSurface()
 	{
 		VkResult err = glfwCreateWindowSurface(m_Instance, m_Window, m_Allocator, &m_Surface);
@@ -232,16 +229,7 @@ namespace LightBox {
 		VkPresentModeKHR* present_modes = (VkPresentModeKHR*)malloc(count * sizeof(VkPresentModeKHR));
 		vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &count, present_modes);
 	}
-	void Device::PrintVulkanInstanceSupportedExtensions() {
-		uint32_t count;
-		vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-		VkExtensionProperties* properties = (VkExtensionProperties*)malloc(count * sizeof(VkExtensionProperties));
-		vkEnumerateInstanceExtensionProperties(nullptr, &count, properties);
 
-		for (uint32_t i = 0; i < count; i++) {
-			std::cout << i + 1 << ". " << properties[i].extensionName << '\n';
-		}
-	}
 	void Device::CreateCommandPool()
 	{
 		VkCommandPoolCreateInfo commandPool_info{};
@@ -252,6 +240,73 @@ namespace LightBox {
 		VkResult err = vkCreateCommandPool(m_Device, &commandPool_info, m_Allocator, &m_CommandPool);
 		check_vk_result(err);
 	}
+
+	void Device::LoadExternalFunctionPointers()
+	{
+		pfn_vkCmdBuildAccelerationStructuresKHR =
+			reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(vkGetDeviceProcAddr(m_Device, "vkCmdBuildAccelerationStructuresKHR"));
+		assert(pfn_vkCmdBuildAccelerationStructuresKHR);
+
+		pfn_vkCreateAccelerationStructureKHR =
+			reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(vkGetDeviceProcAddr(m_Device, "vkCreateAccelerationStructureKHR"));
+		assert(pfn_vkCreateAccelerationStructureKHR);
+
+		pfn_vkGetAccelerationStructureBuildSizesKHR =
+			reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(vkGetDeviceProcAddr(m_Device, "vkGetAccelerationStructureBuildSizesKHR"));
+		assert(pfn_vkGetAccelerationStructureBuildSizesKHR);
+
+		pfn_vkCmdTraceRaysKHR =
+			reinterpret_cast<PFN_vkCmdTraceRaysKHR>(vkGetDeviceProcAddr(m_Device, "vkCmdTraceRaysKHR"));
+		assert(pfn_vkCmdTraceRaysKHR);
+
+		pfn_vkGetBufferDeviceAddressKHR = reinterpret_cast<PFN_vkGetBufferDeviceAddressKHR>(vkGetDeviceProcAddr(g_Device, "vkGetBufferDeviceAddressKHR"));
+		assert(pfn_vkGetBufferDeviceAddressKHR);
+
+		pfn_vkGetAccelerationStructureDeviceAddressKHR =
+			reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(vkGetDeviceProcAddr(g_Device, "vkGetAccelerationStructureDeviceAddressKHR"));
+		assert(pfn_vkGetAccelerationStructureDeviceAddressKHR);
+
+		pfn_vkGetRayTracingShaderGroupHandlesKHR =
+			reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(vkGetDeviceProcAddr(g_Device, "vkGetRayTracingShaderGroupHandlesKHR"));
+		assert(pfn_vkGetRayTracingShaderGroupHandlesKHR);
+
+		pfn_vkCreateRayTracingPipelinesKHR =
+			reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(vkGetDeviceProcAddr(g_Device, "vkCreateRayTracingPipelinesKHR"));
+		assert(pfn_vkCreateRayTracingPipelinesKHR);
+	}
+
+	// HELPER FUNCTIONS
+	bool Device::IsPhysicalDeviceSupportsExtensions(const VkPhysicalDevice device, const std::vector<const char*>& exts)
+	{
+		uint32_t extension_count;
+		VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+		check_vk_result(res);
+		std::vector<VkExtensionProperties> extension_properties(extension_count);
+		res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extension_properties.data());
+		check_vk_result(res);
+
+		std::unordered_set<std::string> extension_set;
+		for (auto& extension_name : extension_properties)
+			extension_set.insert(std::string(extension_name.extensionName));
+
+		for (auto& required_extension_name : exts)
+			if (extension_set.find(std::string(required_extension_name)) == extension_set.end())
+				return false;
+
+		return true;
+	}
+
+	void Device::PrintVulkanInstanceSupportedExtensions() {
+		uint32_t count;
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+		VkExtensionProperties* properties = (VkExtensionProperties*)malloc(count * sizeof(VkExtensionProperties));
+		vkEnumerateInstanceExtensionProperties(nullptr, &count, properties);
+
+		std::cout << "[VULKAN] Vulkan supported instance extensions:\n";
+		for (uint32_t i = 0; i < count; i++)
+			std::cout << i + 1 << ". " << properties[i].extensionName << '\n';
+	}
+
 	uint32_t Device::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
@@ -262,6 +317,7 @@ namespace LightBox {
 		}
 		throw std::runtime_error("Failed to find suitable memory type");
 	}
+
 	void Device::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties,
 		VkBuffer& buffer, VkDeviceMemory& buffer_memory)
 	{
@@ -298,6 +354,7 @@ namespace LightBox {
 		res = vkBindBufferMemory(device, buffer, buffer_memory, 0);
 		check_vk_result(res);
 	}
+
 	VkCommandBuffer Device::BeginSingleTimeCommands()
 	{
 		VkCommandBufferAllocateInfo alloc_info{};
@@ -317,6 +374,7 @@ namespace LightBox {
 
 		return command_buffer;
 	}
+
 	void Device::EndSingleTimeCommands(VkCommandBuffer command_buffer)
 	{
 		vkEndCommandBuffer(command_buffer);
@@ -331,123 +389,13 @@ namespace LightBox {
 
 		vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &command_buffer);
 	}
+
 	uint64_t Device::get_buffer_device_address(VkBuffer buffer)
 	{
 		VkBufferDeviceAddressInfoKHR buffer_device_address_info{};
 		buffer_device_address_info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
 		buffer_device_address_info.buffer = buffer;
-		return vkGetBufferDeviceAddressKHR(m_Device, &buffer_device_address_info);
+		return pfn_vkGetBufferDeviceAddressKHR(m_Device, &buffer_device_address_info);
 	}
-	VKAPI_ATTR void VKAPI_CALL Device::vkCmdTraceRaysKHR(
-		VkCommandBuffer commandBuffer,
-		const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
-		const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
-		const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
-		const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable,
-		uint32_t width,
-		uint32_t height,
-		uint32_t depth)
-	{
-		assert(pfn_vkCmdTraceRaysKHR);
-		pfn_vkCmdTraceRaysKHR(
-			commandBuffer,
-			pRaygenShaderBindingTable,
-			pMissShaderBindingTable,
-			pHitShaderBindingTable,
-			pCallableShaderBindingTable,
-			width,
-			height,
-			depth);
-	}
-	VKAPI_ATTR void VKAPI_CALL Device::vkGetAccelerationStructureBuildSizesKHR(
-		VkDevice                                    device,
-		VkAccelerationStructureBuildTypeKHR         buildType,
-		const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
-		const uint32_t* pMaxPrimitiveCounts,
-		VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo)
-	{
-		assert(pfn_vkGetAccelerationStructureBuildSizesKHR);
-		pfn_vkGetAccelerationStructureBuildSizesKHR(
-			device,
-			buildType,
-			pBuildInfo,
-			pMaxPrimitiveCounts,
-			pSizeInfo);
-	}
-	VKAPI_ATTR VkResult VKAPI_CALL Device::vkCreateAccelerationStructureKHR(
-		VkDevice                                    device,
-		const VkAccelerationStructureCreateInfoKHR* pCreateInfo,
-		const VkAllocationCallbacks* pAllocator,
-		VkAccelerationStructureKHR* pAccelerationStructure)
-	{
-		assert(pfn_vkCreateAccelerationStructureKHR);
-		return pfn_vkCreateAccelerationStructureKHR(
-			device,
-			pCreateInfo,
-			pAllocator,
-			pAccelerationStructure);
-	}
-	VKAPI_ATTR void VKAPI_CALL Device::vkCmdBuildAccelerationStructuresKHR(
-		VkCommandBuffer                             commandBuffer,
-		uint32_t                                    infoCount,
-		const VkAccelerationStructureBuildGeometryInfoKHR* pInfos,
-		const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
-	{
-		PFN_vkCmdBuildAccelerationStructuresKHR pfn_vkCmdBuildAccelerationStructuresKHR = 
-			reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(vkGetDeviceProcAddr(m_Device, "vkCmdBuildAccelerationStructuresKHR"));
-		assert(pfn_vkCmdBuildAccelerationStructuresKHR);
-		pfn_vkCmdBuildAccelerationStructuresKHR(commandBuffer, infoCount, pInfos, ppBuildRangeInfos);
-
-	}
-
-}
-// Defining VULKAN external functions
-VKAPI_ATTR VkDeviceAddress VKAPI_CALL vkGetBufferDeviceAddressKHR(
-	VkDevice                                    device,
-	const VkBufferDeviceAddressInfo* pInfo)
-{
-	PFN_vkGetBufferDeviceAddressKHR pfn_vkGetBufferDeviceAddressKHR = reinterpret_cast<PFN_vkGetBufferDeviceAddressKHR>(vkGetDeviceProcAddr(g_Device, "vkGetBufferDeviceAddressKHR"));
-
-	assert(pfn_vkGetBufferDeviceAddressKHR);
-	return pfn_vkGetBufferDeviceAddressKHR(device, pInfo);
-}
-VKAPI_ATTR VkDeviceAddress VKAPI_CALL vkGetAccelerationStructureDeviceAddressKHR(
-	VkDevice                                    device,
-	const VkAccelerationStructureDeviceAddressInfoKHR* pInfo)
-{
-	PFN_vkGetAccelerationStructureDeviceAddressKHR pfn_vkGetAccelerationStructureDeviceAddressKHR =
-		reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(vkGetDeviceProcAddr(g_Device, "vkGetAccelerationStructureDeviceAddressKHR"));
-	assert(pfn_vkGetAccelerationStructureDeviceAddressKHR);
-	return pfn_vkGetAccelerationStructureDeviceAddressKHR(device, pInfo);
-}
-VKAPI_ATTR VkResult VKAPI_CALL vkGetRayTracingShaderGroupHandlesKHR(
-	VkDevice                                    device,
-	VkPipeline                                  pipeline,
-	uint32_t                                    firstGroup,
-	uint32_t                                    groupCount,
-	size_t                                      dataSize,
-	void* pData)
-{
-	PFN_vkGetRayTracingShaderGroupHandlesKHR pfn_vkGetRayTracingShaderGroupHandlesKHR =
-		reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(vkGetDeviceProcAddr(g_Device, "vkGetRayTracingShaderGroupHandlesKHR"));
-	assert(pfn_vkGetRayTracingShaderGroupHandlesKHR);
-
-	return pfn_vkGetRayTracingShaderGroupHandlesKHR(device, pipeline, firstGroup, groupCount, dataSize, pData);
-}
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateRayTracingPipelinesKHR(
-	VkDevice                                    device,
-	VkDeferredOperationKHR                      deferredOperation,
-	VkPipelineCache                             pipelineCache,
-	uint32_t                                    createInfoCount,
-	const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
-	const VkAllocationCallbacks* pAllocator,
-	VkPipeline* pPipelines)
-{
-	PFN_vkCreateRayTracingPipelinesKHR pfn_vkCreateRayTracingPipelinesKHR =
-		reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(vkGetDeviceProcAddr(g_Device, "vkCreateRayTracingPipelinesKHR"));
-	assert(pfn_vkCreateRayTracingPipelinesKHR);
-
-	return pfn_vkCreateRayTracingPipelinesKHR(device, deferredOperation, pipelineCache, createInfoCount,
-		pCreateInfos, pAllocator, pPipelines);
 }
 

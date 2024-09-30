@@ -41,6 +41,6 @@ namespace LightBox
 		m_VertexBuffer.CreateVertexBuffer(verts);
 		m_IndexBuffer.CreateIndexBuffer(gpu_indices);
 
-		vkDeviceWaitIdle(m_Device.GetDevice());
+		vkDeviceWaitIdle(m_Device.Get());
 	}
 }

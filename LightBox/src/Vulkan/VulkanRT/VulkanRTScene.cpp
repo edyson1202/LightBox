@@ -44,9 +44,9 @@ namespace LightBox
 	}
 	VulkanRTScene::~VulkanRTScene()
 	{
-		vkDestroyDescriptorSetLayout(m_Device.GetDevice(), m_DescriptorSetLayout,
+		vkDestroyDescriptorSetLayout(m_Device.Get(), m_DescriptorSetLayout,
 			m_Device.GetAllocator());
-		vkDestroyDescriptorPool(m_Device.GetDevice(), m_DescriptorPool,
+		vkDestroyDescriptorPool(m_Device.Get(), m_DescriptorPool,
 			m_Device.GetAllocator());
 	}
 	void VulkanRTScene::UploadSceneToGPU()
@@ -96,7 +96,7 @@ namespace LightBox
 			build_info.srcAccelerationStructure = VK_NULL_HANDLE;
 
 			VkAccelerationStructureBuildSizesInfoKHR sizeInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
-			m_Device.vkGetAccelerationStructureBuildSizesKHR(m_Device.GetDevice(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
+			pfn_vkGetAccelerationStructureBuildSizesKHR(m_Device.Get(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 				&build_info, &range_info.primitiveCount, &sizeInfo);
 
 			VkBufferUsageFlags usage_flags = VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR
@@ -109,7 +109,7 @@ namespace LightBox
 			create_info.size = sizeInfo.accelerationStructureSize;
 			create_info.buffer = m_BLASBuffer.GetBuffer();
 			create_info.offset = 0;
-			VkResult res = m_Device.vkCreateAccelerationStructureKHR(m_Device.GetDevice(), &create_info, nullptr, &m_Blas);
+			VkResult res = pfn_vkCreateAccelerationStructureKHR(m_Device.Get(), &create_info, nullptr, &m_Blas);
 			check_vk_result(res);
 			build_info.dstAccelerationStructure = m_Blas;
 
@@ -119,7 +119,9 @@ namespace LightBox
 
 			VkCommandBuffer cmd_buffer = m_Device.BeginSingleTimeCommands();
 			VkAccelerationStructureBuildRangeInfoKHR* pRangeInfo = &range_info;
-			m_Device.vkCmdBuildAccelerationStructuresKHR(cmd_buffer, 1, &build_info, &pRangeInfo);
+			//m_Device.vkCmdBuildAccelerationStructuresKHRa(cmd_buffer, 1, &build_info, &pRangeInfo);
+			pfn_vkCmdBuildAccelerationStructuresKHR(cmd_buffer, 1, &build_info, &pRangeInfo);
+
 			m_Device.EndSingleTimeCommands(cmd_buffer);
 		}
 
@@ -127,7 +129,7 @@ namespace LightBox
 		
 		VkAccelerationStructureDeviceAddressInfoKHR addressInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR };
 		addressInfo.accelerationStructure = m_Blas;
-		VkDeviceAddress blasAddress = vkGetAccelerationStructureDeviceAddressKHR(m_Device.GetDevice(),
+		VkDeviceAddress blasAddress = pfn_vkGetAccelerationStructureDeviceAddressKHR(m_Device.Get(),
 			&addressInfo);
 
 		// Zero -initialize.
@@ -192,7 +194,7 @@ namespace LightBox
 		// Query the worst -case AS size and scratch space size based on
 		// the number of instances (in this case , 1).
 		VkAccelerationStructureBuildSizesInfoKHR sizeInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR };
-		m_Device.vkGetAccelerationStructureBuildSizesKHR(m_Device.GetDevice(), 
+		pfn_vkGetAccelerationStructureBuildSizesKHR(m_Device.Get(), 
 			VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, & buildInfo, & rangeInfo.primitiveCount,
 			& sizeInfo);
 		
@@ -208,7 +210,7 @@ namespace LightBox
 		createInfo.size = sizeInfo.accelerationStructureSize;
 		createInfo.buffer = m_TLASBuffer.GetBuffer();
 		createInfo.offset = 0;
-		VkResult res = (m_Device.vkCreateAccelerationStructureKHR(m_Device.GetDevice(), &createInfo, nullptr, &m_TLAS));
+		VkResult res = (pfn_vkCreateAccelerationStructureKHR(m_Device.Get(), &createInfo, nullptr, &m_TLAS));
 		check_vk_result(res);
 		
 		buildInfo.dstAccelerationStructure = m_TLAS;
@@ -222,7 +224,7 @@ namespace LightBox
 		VkAccelerationStructureBuildRangeInfoKHR * pRangeInfo = &rangeInfo;	
 		VkCommandBuffer cmd = m_Device.BeginSingleTimeCommands();
 		// Build the TLAS.
-		m_Device.vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &pRangeInfo);
+		pfn_vkCmdBuildAccelerationStructuresKHR(cmd, 1, &buildInfo, &pRangeInfo);
 
 		m_Device.EndSingleTimeCommands(cmd);
 	}
@@ -244,7 +246,7 @@ namespace LightBox
 		pool_info.poolSizeCount = 1;
 		pool_info.pPoolSizes = pool_sizes.data();
 		
-		VkResult res = vkCreateDescriptorPool(m_Device.GetDevice(), &pool_info,
+		VkResult res = vkCreateDescriptorPool(m_Device.Get(), &pool_info,
 			m_Device.GetAllocator(), &m_DescriptorPool);
 		check_vk_result(res);
 	}
@@ -275,7 +277,7 @@ namespace LightBox
 		layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
 		layout_info.pBindings = bindings.data();
 
-		VkResult res = vkCreateDescriptorSetLayout(m_Device.GetDevice(), &layout_info,
+		VkResult res = vkCreateDescriptorSetLayout(m_Device.Get(), &layout_info,
 			m_Device.GetAllocator(), &m_DescriptorSetLayout);
 		check_vk_result(res);
 	}

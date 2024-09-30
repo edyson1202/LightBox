@@ -17,7 +17,7 @@ Swapchain::Swapchain(Device& device)
 };
 Swapchain::~Swapchain()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	CleanupSwapchain();
@@ -32,7 +32,7 @@ Swapchain::~Swapchain()
 }
 void Swapchain::CreateSwapchain()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	// SWAPCHAIN
@@ -85,7 +85,7 @@ void Swapchain::CreateSwapchain()
 }
 void Swapchain::CleanupSwapchain()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	for (uint32_t i = 0; i < m_SwapchainImageCount; i++)
@@ -101,7 +101,7 @@ void Swapchain::CleanupSwapchain()
 }
 void Swapchain::CreateFramebuffers()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	m_SwapchainFramebuffers = (VkFramebuffer*)malloc(m_SwapchainImageCount * sizeof(VkFramebuffer));
@@ -122,7 +122,7 @@ void Swapchain::CreateFramebuffers()
 }
 void Swapchain::RecreateSwapchain()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	// Handles window minimization
@@ -176,7 +176,7 @@ void Swapchain::CreateRenderPass()
 	renderPass_info.dependencyCount = 1;
 	renderPass_info.pDependencies = &dependency;
 
-	VkResult err = vkCreateRenderPass(m_Device.GetDevice(), &renderPass_info, m_Device.GetAllocator(), &m_RenderPass);
+	VkResult err = vkCreateRenderPass(m_Device.Get(), &renderPass_info, m_Device.GetAllocator(), &m_RenderPass);
 	check_vk_result(err);
 }
 VkExtent2D Swapchain::GetSwapExtent()
@@ -209,7 +209,7 @@ VkExtent2D Swapchain::GetSwapExtent()
 }
 void Swapchain::CreateSyncObjects()
 {
-	VkDevice device = m_Device.GetDevice();
+	VkDevice device = m_Device.Get();
 	VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 	imageAvailableSemaphore = (VkSemaphore*)malloc(MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore));

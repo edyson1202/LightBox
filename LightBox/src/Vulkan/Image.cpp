@@ -71,7 +71,7 @@ namespace LightBox {
 	}
 	void Image::AllocateMemory(uint64_t size)
 	{
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
 		VkResult res;
@@ -212,7 +212,7 @@ namespace LightBox {
 	}
 	void Image::SetData(const void* data)
 	{
-		VkDevice device = m_Device.GetDevice();
+		VkDevice device = m_Device.Get();
 
 		if (!m_StagingBuffer) {
 			m_Device.CreateBuffer(m_ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |

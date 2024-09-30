@@ -39,10 +39,10 @@ namespace LightBox {
 		m_GraphicsPipeline->~Pipeline();
 		free(m_GraphicsPipeline);
 
-		vkDestroyRenderPass(m_Device.GetDevice(), m_RenderPass, m_Device.GetAllocator());
+		vkDestroyRenderPass(m_Device.Get(), m_RenderPass, m_Device.GetAllocator());
 
-		vkDestroyDescriptorPool(m_Device.GetDevice(), m_DescriptorPool, m_Device.GetAllocator());
-		vkDestroyDescriptorSetLayout(m_Device.GetDevice(), m_DescriptorSetLayout, m_Device.GetAllocator());
+		vkDestroyDescriptorPool(m_Device.Get(), m_DescriptorPool, m_Device.GetAllocator());
+		vkDestroyDescriptorSetLayout(m_Device.Get(), m_DescriptorSetLayout, m_Device.GetAllocator());
 	}
 	void GpuRenderer::RecordRenderingCommandBuffer(VkCommandBuffer& commandBuffer, uint32_t imageIndex)
 	{
@@ -126,7 +126,7 @@ namespace LightBox {
 		poolInfo.pPoolSizes = &poolSize;
 		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-		VkResult res = vkCreateDescriptorPool(m_Device.GetDevice(), &poolInfo, m_Device.GetAllocator(), &m_DescriptorPool);
+		VkResult res = vkCreateDescriptorPool(m_Device.Get(), &poolInfo, m_Device.GetAllocator(), &m_DescriptorPool);
 		check_vk_result(res);
 	}
 	void GpuRenderer::CreateDescriptorSetLayout() {
@@ -142,7 +142,7 @@ namespace LightBox {
 		layoutInfo.bindingCount = 1;
 		layoutInfo.pBindings = &uboLayoutBinding;
 
-		VkResult res = vkCreateDescriptorSetLayout(m_Device.GetDevice(), &layoutInfo, m_Device.GetAllocator(), &m_DescriptorSetLayout);
+		VkResult res = vkCreateDescriptorSetLayout(m_Device.Get(), &layoutInfo, m_Device.GetAllocator(), &m_DescriptorSetLayout);
 	}
 	void GpuRenderer::CreateDescriptorSets() {
 		std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
@@ -154,7 +154,7 @@ namespace LightBox {
 		allocInfo.pSetLayouts = layouts.data();
 
 		m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-		VkResult res = vkAllocateDescriptorSets(m_Device.GetDevice(), &allocInfo, m_DescriptorSets.data());
+		VkResult res = vkAllocateDescriptorSets(m_Device.Get(), &allocInfo, m_DescriptorSets.data());
 		check_vk_result(res);
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -174,7 +174,7 @@ namespace LightBox {
 			descriptorWrite.pImageInfo = nullptr;
 			descriptorWrite.pTexelBufferView = nullptr;
 
-			vkUpdateDescriptorSets(m_Device.GetDevice(), 1, &descriptorWrite, 0, nullptr);
+			vkUpdateDescriptorSets(m_Device.Get(), 1, &descriptorWrite, 0, nullptr);
 		}
 	}
 	void GpuRenderer::CreateRenderPass()
@@ -224,7 +224,7 @@ namespace LightBox {
 		create_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
 		create_info.pDependencies = dependencies.data();
 
-		VkResult res = vkCreateRenderPass(m_Device.GetDevice(), &create_info, m_Device.GetAllocator(), &m_RenderPass);
+		VkResult res = vkCreateRenderPass(m_Device.Get(), &create_info, m_Device.GetAllocator(), &m_RenderPass);
 		check_vk_result(res);
 	}
 	void GpuRenderer::UpdateUniformBuffer(uint32_t currentImage)
@@ -258,6 +258,6 @@ namespace LightBox {
 		alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		alloc_info.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
-		VkResult err = vkAllocateCommandBuffers(m_Device.GetDevice(), &alloc_info, m_CommandBuffers);
+		VkResult err = vkAllocateCommandBuffers(m_Device.Get(), &alloc_info, m_CommandBuffers);
 	}
 }

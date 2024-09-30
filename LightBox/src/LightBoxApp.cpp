@@ -46,7 +46,7 @@ public:
 
 		m_CpuScene.LoadDataFromObj("resources/car.obj");
 
-		m_CpuScene.LoadEnvMap("resources/hdri_05.hdr");
+		m_CpuScene.LoadEnvMap("resources/env_map_03.png");
 
 		m_GpuRenderer.SetScene(m_VulkanScene);
 		{

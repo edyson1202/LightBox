@@ -30,5 +30,6 @@ namespace LightBox {
 		return degrees * pi / 180.0;
 	}
 
+	void TerminateIf(bool condition, const char* message);
 }
 
