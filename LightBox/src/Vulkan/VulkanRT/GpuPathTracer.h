@@ -19,26 +19,28 @@ namespace LightBox
 	class GpuPathTracer
 	{
 	public:
-		GpuPathTracer(Device& device, VulkanRTScene& scene, Camera& camera, Viewport& viewport);
+		GpuPathTracer(Device& device);
+
+		void Init(VulkanRTScene* scene, Camera* camera);
 
 		void OnResize(uint32_t width, uint32_t height);
 
-		VulkanRTScene& GetScene() const { return m_Scene; }
+		std::shared_ptr<Image>& GetFinalImage() { return m_FinalImage; }
+		VkDescriptorSetLayout& GetDescriptorSetLayout() { return m_DescriptorSetLayout; }
 
-		void RecordRenderingCommandBuffer(VkCommandBuffer& commandBuffer, uint32_t imageIndex);
+		void RayTrace(const VkCommandBuffer& cmdBuffer, uint32_t imageIndex);
 	private:
 		void CreateDescriptorPool();
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorSets();
+		void UpdateStorageImageDescriptor() const;
 		void UpdateUniformBuffer(uint32_t currentImage);
 
-		void CreateRenderPass();
 	private:
 		Device& m_Device;
 		
-		VulkanRTScene& m_Scene;
-		Camera& m_Camera;
-		Viewport& m_Viewport;
+		VulkanRTScene* m_Scene;
+		Camera* m_Camera;
 
 		std::shared_ptr<Image> m_FinalImage;
 
@@ -48,10 +50,8 @@ namespace LightBox
 
 		RTPipeline m_Pipeline;
 
-		Buffer m_UniformBuffers[MAX_FRAMES_IN_FLIGHT] = { Buffer(m_Device), Buffer(m_Device) };
+		Buffer m_UniformBuffers[MAX_FRAMES_IN_FLIGHT];
 
-		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
-		VkFormat m_ImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 		uint32_t m_CurrentFrame = 0;
 	};
 }

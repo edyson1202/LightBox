@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 
 #include <cmath>
@@ -9,7 +10,7 @@
 #include "Vector4.h"
 
 namespace LightBox {
-	class Vector3 {
+	class alignas(16) Vector3 {
 	public:
 		Vector3() = default;
 		Vector3(float x, float y, float z)
@@ -59,6 +60,7 @@ namespace LightBox {
 		static Vector3 Max(const Vector3& u, const Vector3& v) {
 			return Vector3(std::max(u.x, v.x), std::max(u.y, v.y), std::max(u.z, v.z));
 		}
+		static Vector3 Mix(const Vector3& u, const Vector3& v, float t);
 
 		const float& operator [] (unsigned i) const { return (&x)[i]; }
 		float& operator [] (unsigned i) { return (&x)[i]; }

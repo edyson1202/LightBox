@@ -186,9 +186,6 @@ VkExtent2D Swapchain::GetSwapExtent()
 
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
-		//std::cout << capabilities.minImageExtent.width << " " << capabilities.minImageExtent.height << '\n';
-		//std::cout << capabilities.maxImageExtent.width << " " << capabilities.maxImageExtent.height << '\n';
-
 		return capabilities.currentExtent;
 	}
 	else

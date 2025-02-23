@@ -6,12 +6,6 @@
 
 #include "Vector3.h"
 
-// Matrices are column major
-// This is how you should visualize the layout in memory
-// [0][0] [1][0] [2][0] [3][0]
-// [0][1] [1][1] [2][1] [3][1]
-// [0][2] [1][2] [2][2] [3][2]
-// [0][3] [1][3] [2][3] [3][3]
 namespace LightBox {
 	float ToRadians(float degrees) {
 		return degrees * (3.14159f / 180.f);
@@ -24,7 +18,7 @@ namespace LightBox {
 		m[2][2] = 1;
 		m[3][3] = 1;
 	}
-	Mat4 Mat4::GetInverse()
+	Mat4 Mat4::GetInverse() const
 	{
 		Mat4 temp = *this;
 		Mat4 inverse;
@@ -53,7 +47,7 @@ namespace LightBox {
 
 		return inverse;
 	}
-	void Mat4::PrintMatrix()
+	void Mat4::Print() const
 	{
 		for (uint32_t i = 0; i < 4; i++) {
 			for (uint32_t j = 0; j < 4; j++) {

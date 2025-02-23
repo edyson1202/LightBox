@@ -61,8 +61,8 @@ namespace LightBox {
 			auto attributeDescriptions = Vertex::GetAttributeDescriptions();
 			vertex_input_info.vertexBindingDescriptionCount = 1;
 			vertex_input_info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-			std::cout << vertex_input_info.vertexBindingDescriptionCount << " "
-				<< vertex_input_info.vertexAttributeDescriptionCount;
+			/*std::cout << vertex_input_info.vertexBindingDescriptionCount << " "
+				<< vertex_input_info.vertexAttributeDescriptionCount;*/
 			vertex_input_info.pVertexBindingDescriptions = &bindingDescriptions;
 			vertex_input_info.pVertexAttributeDescriptions = attributeDescriptions.data();
 		}
@@ -191,6 +191,7 @@ namespace LightBox {
 		else {
 			pipeline_info.renderPass = *m_Device.GetSwapchain().GetRenderPass();
 		}
+		pipeline_info.renderPass = *m_Device.GetSwapchain().GetRenderPass();
 		pipeline_info.subpass = 0;
 		pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 		pipeline_info.basePipelineIndex = -1;
@@ -212,8 +213,6 @@ namespace LightBox {
 		uint32_t* code = (uint32_t*)malloc(codeSize * sizeof(uint32_t));
 		inFile.seekg(0);
 		inFile.read(reinterpret_cast<char*>(code), codeSize);
-
-		std::cout << codeSize << '\n';
 
 		inFile.close();
 		return code;

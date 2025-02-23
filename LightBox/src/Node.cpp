@@ -56,12 +56,6 @@ namespace LightBox {
 		m_ChildA = new Node(m_Tris, m_TriangleIndex, sideA_tri_count);
 		m_ChildB = new Node(m_Tris, m_TriangleIndex + sideA_tri_count, m_TriangleCount - sideA_tri_count);
 
-		/*std::cout << "Side A index: " << m_TriangleIndex << std::endl;
-		std::cout << "Side B index: " << m_TriangleIndex + sideA_tri_count << std::endl;
-		
-		std::cout << "Side A triangle count: " << sideA_tri_count << std::endl;
-		std::cout << "Side B triangle count: " << m_TriangleCount - sideA_tri_count << std::endl;*/
-
 		if (sideA_tri_count == 0 || m_TriangleCount - sideA_tri_count == 0)
 		{
 			std::cout << "catch!\n";

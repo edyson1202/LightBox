@@ -51,5 +51,6 @@ namespace LightBox {
 		std::vector<Vector3> m_RayDirections;
 
 		friend class SceneSerializer;
+		friend class GpuPathTracer;
 	};
 }

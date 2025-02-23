@@ -9,15 +9,23 @@
 struct GLFWwindow;
 
 namespace LightBox {
+	class Buffer;
+
+	static VkDevice g_Device;
+	static VkAllocationCallbacks* g_Allocator;
+
 	class Device final {
 	public:
 		Device(GLFWwindow* window);
 		~Device();
 
+		static VkDevice GetDevice() { return g_Device; }
+		static VkAllocationCallbacks* GetAllocator() { return g_Allocator; }
+
 		VkInstance GetInstance() const { return m_Instance; }
 		VkDevice& Get() { return m_Device; }
 		VkPhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
-		VkAllocationCallbacks* GetAllocator() const { return m_Allocator; }
+		//VkAllocationCallbacks* GetAllocator() const { return m_Allocator; }
 		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
 		VkQueue& GetGraphicsQueue() { return m_Queue; }
 		VkCommandPool GetCommandPool() const { return m_CommandPool; }
@@ -27,6 +35,7 @@ namespace LightBox {
 
 		static bool IsPhysicalDeviceSupportsExtensions(const VkPhysicalDevice device, const std::vector<const char*>& exts);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void Device::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties, Buffer& buffer);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties,
 			VkBuffer& buffer, VkDeviceMemory& buffer_memory);
 		VkCommandBuffer BeginSingleTimeCommands();

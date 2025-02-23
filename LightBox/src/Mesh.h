@@ -17,8 +17,10 @@ namespace LightBox {
 	{
 	public:
 		Mesh(std::vector<Triangle>& mesh_data, Material* material, const std::string& name)
-			: tris(mesh_data), m_Mat(material), m_BVH_Root(tris, 0,
-				tris.size()), m_Name(name)
+			: tris(mesh_data),
+		m_Mat(material),
+		m_BVH_Root(tris, 0, tris.size()),
+		m_Name(name)
 		{
 			//m_BVH_Root = Node(tris, 0, mesh_data.size());
 			m_BVH_Root.Split(15);

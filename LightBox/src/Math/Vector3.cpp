@@ -17,4 +17,9 @@ namespace LightBox {
         Vector3 refracted_y = -sqrt(fabs(1.f - refracted_x.GetLengthSq())) * n;
         return refracted_x + refracted_y;
     }
+
+    Vector3 Vector3::Mix(const Vector3& u, const Vector3& v, float t)
+    {
+        return (1.f - t) * u + t * v;
+    }
 }

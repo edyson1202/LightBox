@@ -39,13 +39,13 @@ namespace LightBox {
 			SetData(data);
 		}
 
-		std::cout << "Image constructor" << std::endl;
+		std::cout << "[VULKAN] Image constructor called!\n";
 	}
 	Image::~Image()
 	{
 		Release();
 
-		std::cout << "Destructor called" << std::endl;
+		std::cout << "[VULKAN] Image Destructor called!\n";
 	}
 	void Image::Release() {
 		//Application::SubmitResourceFree([sampler = m_Sampler, image_view = m_ImageView, image = m_FinalImage,
@@ -59,7 +59,6 @@ namespace LightBox {
 		//		vkDestroyBuffer(device, buffer, allocator);
 		//		vkFreeMemory(device, buffer_memory, allocator);
 
-		//		std::cout << "Resource submited" << std::endl;
 		//	});
 
 		m_Sampler = nullptr;
@@ -69,6 +68,7 @@ namespace LightBox {
 		m_StagingBuffer = nullptr;
 		m_StagingBufferMemory = nullptr;
 	}
+
 	void Image::AllocateMemory(uint64_t size)
 	{
 		VkDevice device = m_Device.Get();
@@ -89,7 +89,8 @@ namespace LightBox {
 			info.arrayLayers = 1;
 			info.samples = VK_SAMPLE_COUNT_1_BIT;
 			info.tiling = VK_IMAGE_TILING_OPTIMAL;
-			info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			// TODO VK_IMAGE_USAGE_STORAGE_BIT was added to accomodate Ray Tracing destination image, however image usage should be parametrized at image creation
+			info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 			info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -123,7 +124,7 @@ namespace LightBox {
 			res = vkCreateImageView(device, &info, allocator, &m_ImageView);
 			check_vk_result(res);
 
-			std::cout << "Image view created:" << res << std::endl;
+			std::cout << "[VULKAN] Image view created:" << res << '\n';
 		}
 		// Create the sampler
 		{
@@ -142,9 +143,16 @@ namespace LightBox {
 			res = vkCreateSampler(device, &info, allocator, &m_Sampler);
 			check_vk_result	(res);
 		}
+
 		m_DescriptorSet = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
-	void Image::TransitionImageLayout(VkImage image, VkFormat, VkImageLayout old_layout, VkImageLayout new_layout)
+
+	void Image::TransitionImageLayout(VkImageLayout old_layout, VkImageLayout new_layout)
+	{
+		TransitionImageLayout(m_FinalImage, m_Format, old_layout, new_layout);
+	}
+
+	void Image::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout)
 	{
 		VkCommandBuffer command_buffer = m_Device.BeginSingleTimeCommands();
 

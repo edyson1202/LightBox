@@ -1,4 +1,5 @@
 bin/
+development_notes.txt
 bin-int/
 !vendor/bin/
 .vs/

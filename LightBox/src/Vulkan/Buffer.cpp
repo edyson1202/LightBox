@@ -8,22 +8,16 @@
 #include "Application.h"
 #include "Vertex.h"
 
-
 namespace LightBox {
-	Buffer::Buffer(Device& device) 
-		: m_Device(device), m_Allocator(device.GetAllocator()) {}
-	//Buffer::Buffer(Device& device, uint32_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties)
-	//	: m_Device(device), m_Allocator(device.GetAllocator())
-	//{
-	//	m_Device.CreateBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, mem_properties, m_Buffer, m_Memory);
-	//}
-	Buffer::~Buffer() {
-		VkDevice device = m_Device.Get();
-		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
+	Buffer::Buffer() 
+		: m_Device(Application::GetDevice()), m_Allocator(Device::GetAllocator()) {}
 
-		vkDestroyBuffer(device, m_Buffer, allocator);
-		vkFreeMemory(device, m_Memory, allocator);
+	Buffer::~Buffer()
+	{
+		vkDestroyBuffer(m_Device.Get(), m_Buffer, m_Device.GetAllocator());
+		vkFreeMemory(m_Device.Get(), m_Memory, m_Device.GetAllocator());
 	}
+
 	void Buffer::CopyBuffer(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize size)
 	{
 		VkCommandBuffer command_buffer = m_Device.BeginSingleTimeCommands();
@@ -37,14 +31,18 @@ namespace LightBox {
 
 		m_Device.EndSingleTimeCommands(command_buffer);
 	}
+
 	void Buffer::CreateBuffer(uint32_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties)
 	{
 		m_BufferSize = size;
-		m_Device.CreateBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, mem_properties,
+		Application::GetDevice().CreateBuffer(size, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, mem_properties,
 			m_Buffer, m_Memory);
 	}
+
 	void Buffer::Update(void* data, uint32_t size)
 	{
+		TerminateIf(size > m_BufferSize, "Trying to write more out of buffer bounds!");
+
 		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
 
@@ -65,16 +63,19 @@ namespace LightBox {
 		vkDestroyBuffer(device, staggingBuffer, allocator);
 		vkFreeMemory(device, staggingMemory, allocator);
 	}
+
 	void* Buffer::Map()
 	{
-		vkMapMemory(m_Device.Get(), m_Memory, 0, m_BufferSize, 0, &m_MappedMemory);
+		VK_CHECK(vkMapMemory(m_Device.Get(), m_Memory, 0, m_BufferSize, 0, &m_MappedMemory));
 		return m_MappedMemory;
 	}
+
 	void Buffer::UnMap()
 	{
 		vkUnmapMemory(m_Device.Get(), m_Memory);
-		free(m_MappedMemory);
+		//free(m_MappedMemory);
 	}
+
 	void Buffer::CreateVertexBuffer(const std::vector<Vertex>& vertices) {
 		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
@@ -99,6 +100,7 @@ namespace LightBox {
 		vkDestroyBuffer(device, staggingBuffer, allocator);
 		vkFreeMemory(device, staggingMemory, allocator);
 	}
+
 	void Buffer::CreateIndexBuffer(const std::vector<uint32_t>& indices) {
 		VkDevice device = m_Device.Get();
 		VkAllocationCallbacks* allocator = m_Device.GetAllocator();
@@ -123,6 +125,7 @@ namespace LightBox {
 		vkDestroyBuffer(device, staggingBuffer, allocator);
 		vkFreeMemory(device, staggingBufferMemory, allocator);
 	}
+
 	void Buffer::CreateUniformBuffer() {
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 

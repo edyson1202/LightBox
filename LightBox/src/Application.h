@@ -19,6 +19,9 @@ const uint32_t HEIGHT = 1080;
 struct GLFWwindow;
 
 namespace LightBox {
+
+	static Device* g_DeviceWrapper;
+
 	class Application {
 	public:
 		Application();
@@ -33,7 +36,7 @@ namespace LightBox {
 
 		static Application& Get();
 
-		Device& GetDevice();
+		static Device& GetDevice();
 
 		GLFWwindow* GetWindowHandle() { return m_WindowHandle; };
 

@@ -5,14 +5,12 @@
 namespace LightBox
 {
 	VulkanScene::VulkanScene(Device& device)
-		: m_Device(device), m_VertexBuffer(m_Device), m_IndexBuffer(m_Device)
-	{
-	}
+		: m_Device(device)
+	{}
 
 	void VulkanScene::LoadSceneFromRAM(const Scene& scene, 
 		std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
-
 		m_VertexCount = scene.m_Vertices.size();
 		m_IndicesCount = scene.m_Indices.size();
 

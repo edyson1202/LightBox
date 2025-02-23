@@ -144,8 +144,6 @@ namespace LightBox {
 	void Camera::RecalculateProjection()
 	{
 		m_Projection = Mat4::GetProjectionMatrix(m_Fov, (float)m_ViewportHeight / (float)m_ViewportWidth, m_NearPlane, m_FarPlane);
-		//std::cout << "From projection m_ViewportHeight: " << m_ViewportHeight << '\n';
-		//std::cout << "From projection m_ViewportWidth: " << m_ViewportWidth << '\n';
 		m_InverseProjection = m_Projection.GetInverse();
 	}
 	void Camera::RecalculateView()

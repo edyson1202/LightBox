@@ -80,6 +80,7 @@ void Application::Init()
 	InitVulkan();
 
 	m_Device = new Device(m_WindowHandle);
+	g_DeviceWrapper = m_Device;
 
 	CreateImGuiDescriptorPool();
 	CreateCommandBuffers();
@@ -342,7 +343,7 @@ float Application::GetTime()
 	return (float)glfwGetTime();
 }
 Device& Application::GetDevice() {
-	return *m_Device;
+	return *g_DeviceWrapper;
 }
 void Application::CreateImGuiDescriptorPool() {
 	// Create descriptor pool for IMGUI

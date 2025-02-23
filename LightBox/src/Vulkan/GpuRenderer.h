@@ -53,7 +53,7 @@ namespace LightBox {
 		Viewport& m_Viewport;
 		Camera& m_Camera;
 
-		Buffer m_UniformBuffers[MAX_FRAMES_IN_FLIGHT] = { Buffer(m_Device), Buffer(m_Device) };
+		Buffer m_UniformBuffers[MAX_FRAMES_IN_FLIGHT];
 		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 		VkFormat m_ImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 

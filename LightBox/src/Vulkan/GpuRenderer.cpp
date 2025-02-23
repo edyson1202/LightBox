@@ -21,12 +21,11 @@ namespace LightBox {
 	{
 		//m_Camera.OnResize(m_Device.GetSwapchain().GetSwapExtent().width, m_Device.GetSwapchain().GetSwapExtent().height);
 
-		std::cout << "width: " << m_Device.GetSwapchain().GetSwapExtent().width << '\n';
-		std::cout << "height: " << m_Device.GetSwapchain().GetSwapExtent().height << '\n';
+		std::cout << "[VULKAN] Swapchain width: " << m_Device.GetSwapchain().GetSwapExtent().width << '\n';
+		std::cout << "[VULKAN] Swapchain height: " << m_Device.GetSwapchain().GetSwapExtent().height << '\n';
 
 		CreateDescriptorPool();
 		CreateDescriptorSetLayout();
-
 
 		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			m_UniformBuffers[i].CreateUniformBuffer();
@@ -62,18 +61,14 @@ namespace LightBox {
 		renderPass_info.framebuffer = m_Viewport.GetFramebuffers()[imageIndex];
 		int32_t x_offset = swapchain.GetExtent().width - m_Camera.m_ViewportWidth;
 		int32_t y_offset = swapchain.GetExtent().height - m_Camera.m_ViewportHeight;
-		/*std::cout << "x_offset: " << x_offset << "\n";
-		std::cout << "y_offset: " << y_offset << "\n";
-		std::cout << "swapchain.x: " << swapchain.GetExtent().width << "\n";
-		std::cout << "swapchain.y: " << swapchain.GetExtent().height << "\n";*/
+
 		renderPass_info.renderArea.offset = { 0, 0 };
 		//renderPass_info.renderArea.extent = swapchain.GetExtent();
 		renderPass_info.renderArea.extent.width = m_Camera.m_ViewportWidth;
 		renderPass_info.renderArea.extent.height = m_Camera.m_ViewportHeight;
 		renderPass_info.renderArea.extent.width = 1582;
 		renderPass_info.renderArea.extent.height = 998;
-		/*std::cout << "WIDTH: " << m_Camera.m_ViewportWidth << "\n";
-		std::cout << "HEIGHT: " << m_Camera.m_ViewportHeight << "\n";*/
+
 		VkClearValue clearColor{ {{0.2f, 0.2f, 0.2f, 1.f}} };
 		renderPass_info.clearValueCount = 1;
 		renderPass_info.pClearValues = &clearColor;
@@ -99,10 +94,10 @@ namespace LightBox {
 		scissor.extent.height = 998;
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		VkBuffer vertexBuffers[1] = { m_Scene->m_VertexBuffer.GetBuffer() };
+		VkBuffer vertexBuffers[1] = { m_Scene->m_VertexBuffer.Get() };
 		VkDeviceSize offsets[1] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, m_Scene->m_IndexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, m_Scene->m_IndexBuffer.Get(), 0, VK_INDEX_TYPE_UINT32);
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1,
 			&m_DescriptorSets[m_CurrentFrame], 0, nullptr);
@@ -159,7 +154,7 @@ namespace LightBox {
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = m_UniformBuffers[i].GetBuffer();
+			bufferInfo.buffer = m_UniformBuffers[i].Get();
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 

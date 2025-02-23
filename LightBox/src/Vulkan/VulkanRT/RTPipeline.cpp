@@ -12,8 +12,8 @@ namespace LightBox
 	{
 		return (value + alignment - 1) & ~(alignment - 1);
 	}
-	RTPipeline::RTPipeline(Device& device, GpuPathTracer& path_tracer)
-		: m_Device(device), m_PathTracer(path_tracer)
+	RTPipeline::RTPipeline(Device& device)
+		: m_Device(device)
 	{
 		// Get the ray tracing pipeline properties, which we'll need later on
 		m_RTPipelineProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
@@ -22,17 +22,19 @@ namespace LightBox
 		device_properties.pNext = &m_RTPipelineProperties;
 		vkGetPhysicalDeviceProperties2(m_Device.GetPhysicalDevice(), &device_properties);
 	}
-	void RTPipeline::CreateRTPipeline()
+	void RTPipeline::CreateRTPipeline(VkDescriptorSetLayout& descriptor_set_layout)
 	{
 		// Create RT Pipeline Layout
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.setLayoutCount = 1;
-		pipeline_layout_create_info.pSetLayouts = &m_PathTracer.GetScene().GetDescriptorSetLayout();
+		pipeline_layout_create_info.pSetLayouts = &descriptor_set_layout;
 
-		VkResult res = (vkCreatePipelineLayout(m_Device.Get(), &pipeline_layout_create_info,
-			nullptr, &m_RTPipelineLayout));
-		check_vk_result(res);
+		VK_CHECK(vkCreatePipelineLayout(
+			m_Device.Get(),
+			&pipeline_layout_create_info,
+			nullptr,
+			&m_RTPipelineLayout));
 
 		// Setting up ray tracing shader groups
 		std::vector<VkPipelineShaderStageCreateInfo> shader_stages;
@@ -82,7 +84,7 @@ namespace LightBox
 		}
 		// Ray closest hit group
 		{
-			const char* closest_hit_shader_path = "src/shaders/closesthit.rchit.spv";
+			const char* closest_hit_shader_path = "src/shaders/shadows.rchit.spv";
 
 			VkPipelineShaderStageCreateInfo stage_info{};
 			stage_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -109,27 +111,48 @@ namespace LightBox
 		rtpipeline_info.pStages = shader_stages.data();
 		rtpipeline_info.groupCount = static_cast<uint32_t>(m_ShaderGroups.size());
 		rtpipeline_info.pGroups = m_ShaderGroups.data();
-		rtpipeline_info.maxPipelineRayRecursionDepth = 1;
+		rtpipeline_info.maxPipelineRayRecursionDepth = 2;
 		rtpipeline_info.layout = m_RTPipelineLayout;
-		res = pfn_vkCreateRayTracingPipelinesKHR(m_Device.Get(), VK_NULL_HANDLE, VK_NULL_HANDLE,
-			1, &rtpipeline_info, m_Device.GetAllocator(), &m_RTPipeline);
+
+		VkResult res = pfn_vkCreateRayTracingPipelinesKHR(
+			m_Device.Get(), 
+			VK_NULL_HANDLE,
+			VK_NULL_HANDLE,
+			1,
+			&rtpipeline_info,
+			m_Device.GetAllocator(),
+			&m_RTPipeline);
 		check_vk_result(res);
+
+		CreateShaderBindingTable();
 	}
-	void RTPipeline::CreateShaderBindingTables()
+	void RTPipeline::CreateShaderBindingTable()
 	{
 		const uint32_t group_count = static_cast<uint32_t>(m_ShaderGroups.size());
 		const uint32_t group_handle_size = m_RTPipelineProperties.shaderGroupHandleSize;
+
+		/*const uint32_t group_handle_size_aligned = aligned_size(
+			m_RTPipelineProperties.shaderGroupHandleSize, m_RTPipelineProperties.shaderGroupHandleAlignment);*/
+		// TODO point to be investigated (how should the aligned size be obtained?)
 		const uint32_t group_handle_size_aligned = aligned_size(
 			m_RTPipelineProperties.shaderGroupHandleSize, m_RTPipelineProperties.shaderGroupHandleAlignment);
+
+		std::cout << "[VULKAN] ShaderGroupHandleSize: " << m_RTPipelineProperties.shaderGroupHandleSize << "\n";
+		std::cout << "[VULKAN] ShaderGroupHandleAlignment: " << m_RTPipelineProperties.shaderGroupHandleAlignment << "\n";
+		std::cout << "[VULKAN] ShaderGroupBaseAlignment: " << m_RTPipelineProperties.shaderGroupBaseAlignment << "\n";
 		//const uint32_t handle_alignment = m_RTPipelineProperties.shaderGroupHandleAlignment;
 
 		const uint32_t sbt_size = group_count * group_handle_size_aligned;
 
 		// Copy the pipeline's shader handles into a host buffer
 		std::vector<uint8_t> shader_handle_storage(sbt_size);
-		VkResult res = pfn_vkGetRayTracingShaderGroupHandlesKHR(m_Device.Get(), m_RTPipeline, 0, 
-			group_count, sbt_size, shader_handle_storage.data());
-		check_vk_result(res);
+		VK_CHECK(pfn_vkGetRayTracingShaderGroupHandlesKHR(
+			m_Device.Get(),
+			m_RTPipeline, 
+			0, 
+			group_count,
+			sbt_size,
+			shader_handle_storage.data()));
 
 		const VkBufferUsageFlags sbt_buffer_usage_flags = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR |
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
@@ -142,12 +165,13 @@ namespace LightBox
 		m_HitSBT.CreateBuffer(group_handle_size, sbt_buffer_usage_flags, stb_memory_property);
 
 		// Copy the shader handles from the host buffer to the binding tables
-		uint8_t* data = static_cast<uint8_t*>(m_RayGenSBT.Map());
-		memcpy(data, shader_handle_storage.data(), group_handle_size);
-		data = static_cast<uint8_t*>(m_RayGenSBT.Map());
-		memcpy(data, shader_handle_storage.data() + group_handle_size_aligned, group_handle_size);
-		data = static_cast<uint8_t*>(m_RayGenSBT.Map());
-		memcpy(data, shader_handle_storage.data() + group_handle_size_aligned * 2, group_handle_size);
+		// TODO point to be investigated, copy from miss sbt and hit sbt not just from raygen sbt
+		uint8_t* pData = static_cast<uint8_t*>(m_RayGenSBT.Map());
+		memcpy(pData, shader_handle_storage.data(), group_handle_size);
+		pData = static_cast<uint8_t*>(m_MissSBT.Map());
+		memcpy(pData, shader_handle_storage.data() + group_handle_size_aligned, group_handle_size);
+		pData = static_cast<uint8_t*>(m_HitSBT.Map());
+		memcpy(pData, shader_handle_storage.data() + group_handle_size_aligned * 2, group_handle_size);
 
 		m_RayGenSBT.UnMap();
 		m_MissSBT.UnMap();

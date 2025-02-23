@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "VulkanUtils.h"
+#include "Buffer.h"
 #include "Utils.h"
 
 //#define IMGUI_UNLIMITED_FRAME_RATE
@@ -24,7 +25,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, 
 	return VK_FALSE;
 }
 #endif // IMGUI_VULKAN_DEBUG_REPORT
-VkDevice g_Device = VK_NULL_HANDLE;
+//VkDevice g_Device = VK_NULL_HANDLE;
 
 namespace LightBox {
 	std::vector<const char*> req_physical_device_exts = {
@@ -131,6 +132,9 @@ namespace LightBox {
 		VkResult res = vkEnumeratePhysicalDevices(m_Instance, &gpu_count, devices.data());
 		check_vk_result(res);
 
+		
+		VK_CHECK(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, devices.data()));
+
 		std::cout << "[VULKAN] Physical devices count: " << gpu_count << '\n';
 
 		// Select a physical device
@@ -200,8 +204,7 @@ namespace LightBox {
 		vkGetPhysicalDeviceFeatures2(m_PhysicalDevice, &features2);
 
 		// LOGICAL DEVICE
-		VkDeviceCreateInfo device_info = {};
-		device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
 		device_info.enabledExtensionCount = (uint32_t)req_physical_device_exts.size();
 		device_info.ppEnabledExtensionNames = req_physical_device_exts.data();
 		device_info.pEnabledFeatures = nullptr;
@@ -281,13 +284,13 @@ namespace LightBox {
 		uint32_t extension_count;
 		VkResult res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
 		check_vk_result(res);
-		std::vector<VkExtensionProperties> extension_properties(extension_count);
-		res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extension_properties.data());
+		std::vector<VkExtensionProperties> extensions(extension_count);
+		res = vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, extensions.data());
 		check_vk_result(res);
 
 		std::unordered_set<std::string> extension_set;
-		for (auto& extension_name : extension_properties)
-			extension_set.insert(std::string(extension_name.extensionName));
+		for (auto& extension : extensions)
+			extension_set.insert(std::string(extension.extensionName));
 
 		for (auto& required_extension_name : exts)
 			if (extension_set.find(std::string(required_extension_name)) == extension_set.end())
@@ -316,6 +319,12 @@ namespace LightBox {
 				return i;
 		}
 		throw std::runtime_error("Failed to find suitable memory type");
+	}
+
+	void Device::CreateBuffer(uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties, Buffer& buffer)
+	{
+		buffer.SetSize(size);
+		CreateBuffer(size, usage, mem_properties, buffer.Get(), buffer.GetMemory());
 	}
 
 	void Device::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties,

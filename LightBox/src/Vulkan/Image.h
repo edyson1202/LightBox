@@ -23,11 +23,15 @@ namespace LightBox {
 
 		uint32_t GetWidth() const { return m_Width; }
 		uint32_t GetHeight() const { return m_Height; }
+		void TransitionImageLayout(VkImageLayout old_layout, VkImageLayout new_layout);
+
 	private:
 		void AllocateMemory(uint64_t size);
-		void TransitionImageLayout(VkImage image, VkFormat, VkImageLayout old_layout, VkImageLayout new_layout);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 	private:
+		Device& m_Device;
+
 		uint32_t m_Width, m_Height;
 		VkFormat m_Format;
 		VkDeviceSize m_ImageSize;
@@ -41,7 +45,5 @@ namespace LightBox {
 
 		VkBuffer m_StagingBuffer = nullptr;
 		VkDeviceMemory m_StagingBufferMemory = nullptr;
-
-		Device& m_Device;
 	};
 }

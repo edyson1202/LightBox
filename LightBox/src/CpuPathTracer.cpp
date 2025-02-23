@@ -15,11 +15,10 @@ namespace LightBox
 		if (ray.GetDirection().y < 0)
 			return Vector3(0.23f, 0.2f, 0.2f);
 
-		Vector3 dir = ray.GetDirection();
-		float a = 0.5f * (dir.y + 1.0f);
+		float t = 0.5f * (ray.GetDirection().y + 1.0f);
 		Vector3 sky_color(0.5f, 0.7f, 1.0f);
 
-		return (1.0f - a) * Vector3(1.0f) + a * sky_color;
+		return Vector3::Mix(sky_color, Vector3(1), t);
 	}
 	static void WriteImageToPPMFile(const uint32_t image_width, const uint32_t image_height, const uint32_t* image_data)
 	{
@@ -47,6 +46,7 @@ namespace LightBox
 
 		return 0;
 	}
+
 	// This is used for anti-aliasing
 	Vector3 pixel_sample_square()
 	{
@@ -56,11 +56,11 @@ namespace LightBox
 	
 		return Vector3(px, py, 0.f);
 	}
+
 	CpuPathTracer::CpuPathTracer(Device& device, Camera& camera, Scene& new_scene)
 		: m_Device(device), m_Camera(camera), m_Scene(new_scene)
-	{
-		
-	}
+	{}
+
 	void CpuPathTracer::OnResize(uint32_t width, uint32_t height)
 	{
 		if (m_FinalImage) {
@@ -85,6 +85,7 @@ namespace LightBox
 		for (uint32_t i = 0; i < height; i++)
 			m_ImageVerticalIter[i] = i;
 	}
+
 	void CpuPathTracer::Render() 
 	{
 		if (m_FrameIndex == 1)
