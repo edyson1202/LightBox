@@ -1,5 +1,7 @@
 # LightBox
-LightBox is a CPU Path Tracer that is currently being extended with a GPU path tracer using Vulkan. It uses Vulkan and GLFW for window rendering and ImGui for UI rendering.
+LightBox is a CPU Path Tracer that is currently being extended with a GPU path tracer using Vulkan.
+
+## Features
 
 #### Viewport Navigation
 
@@ -44,46 +46,46 @@ Graphical user interface library for C++.
 
 Used to create LightBox UI and Viewport.
 
-`https://github.com/ocornut/imgui`
+[imgui](https://github.com/ocornut/imgui)
 
 #### GLFW
-platform-independent API for creating windows.
+Platform-independent API for creating windows.
 
-`https://github.com/glfw/glfw`
+[glfw](https://github.com/glfw/glfw)
 
 #### glm
 Mathematics library for graphics software.
 
 Used along the internal math library, for comparison and development speed purposes.
 
-`https://github.com/g-truc/glm`
+[glm](https://github.com/g-truc/glm)
 
 #### yaml-cpp
 C++ YAML parser and emmiter.
 
 Used for serialization and deserialization.
 
-`https://github.com/TheCherno/yaml-cpp`
+[yaml-cpp](https://github.com/TheCherno/yaml-cpp)
 
 #### stb_image
 Image loader.
 
 Used to load textures and environment maps.
 
-`https://github.com/nothings/stb/blob/master/stb_image.h`
+[stb_image](https://github.com/nothings/stb/blob/master/stb_image.h)
 
 ## Gallery
 
 Ray Tracing with Vulkan
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/29.png">
+<img align="center" src="renders/30.png">
+<img align="center" src="renders/29.png">
 <img align="center" src="renders/10.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/29.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/28.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/27.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/25.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/24.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/23.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/20.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/18.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/17.png">
-<img align="center" src="https://github.com/edyson1202/LightBox/blob/main/renders/15.png">
+<img align="center" src="renders/28.png">
+<img align="center" src="renders/27.png">
+<img align="center" src="renders/25.png">
+<img align="center" src="renders/24.png">
+<img align="center" src="renders/23.png">
+<img align="center" src="renders/20.png">
+<img align="center" src="renders/18.png">
+<img align="center" src="renders/17.png">
+<img align="center" src="renders/15.png">
